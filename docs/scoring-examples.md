@@ -54,7 +54,7 @@ A sunny and cold day after fresh snow.
 | Wind | 20 km/h | 1.00 | 10% | 10.0 |
 | **Score** | | | | **60** |
 
-**Indoor sightseeing:** The outdoor score is 60. Thus, the level is **Save for later**. There is no travel hint, because no snow falls today. There is no busy hint, because it is dry. There is no town size hint, because the app does not recommend indoor activities today.
+**Indoor sightseeing:** The outdoor score is 60. Thus, the level is **Save for later**. There is no travel hint, because no snow falls today. There is no busy hint, because it is dry. The town size hint is part of the weekly view of the indoor row. It does not change with the level of the day.
 
 **Result**
 
@@ -100,7 +100,7 @@ A day with good surf.
 
 **Outdoor sightseeing:** All factors are in their ideal range (dry, "feels like" 19 °C, sunny, light wind). Thus, the score is **100**.
 
-**Indoor sightseeing:** The outdoor score is 100. Thus, the level is **Save for later**. There are no hints. The town size hint shows only when the app recommends indoor activities.
+**Indoor sightseeing:** The outdoor score is 100. Thus, the level is **Save for later**. There is no travel hint and no busy hint. The town size hint is part of the weekly view of the indoor row.
 
 **Result**
 
@@ -293,4 +293,4 @@ The calculations showed 2 errors. In these 2 cases, the weighted sum alone gave 
 1. **Surfing in Newquay:** The weighted sum is 55, because the swell height has a large weight. The new gate sets a maximum score of 35 when the mean wind is more than 30 km/h. The score is now 35 (Fair). Surfers give a similar rating to this type of day.
 2. **Outdoor sightseeing in Kraków:** The first version of the method gave 37, because daylight and UV added points during rain. We removed these 2 factors. The new gate sets a maximum score of 25 when the rain is more than 5 mm and the probability is more than 70%. The score is now 25 (Fair).
 
-For this reason, 1 configuration file contains all weights, curves and gates. These examples are the unit tests.
+For this reason, configuration files contain all weights, curves and gates (1 file for each activity). Thus, you can change a gate without a change to the scoring code.
