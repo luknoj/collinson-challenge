@@ -3,6 +3,7 @@
 This document tells how the app is built: the technology, the repository structure, the data flow, the backend and the GraphQL schema. The app has 1 screen. The user finds a town, and the app shows the scores for 4 activities for the next 7 days.
 
 - **UI specification:** [ui-spec.md](ui-spec.md)
+- **Order of the work:** [implementation-plan.md](implementation-plan.md)
 - **Scoring rules:** [scoring.md](scoring.md)
 - **Examples:** [scoring-examples.md](scoring-examples.md)
 - **Evidence:** [scoring-evidence.md](scoring-evidence.md)
