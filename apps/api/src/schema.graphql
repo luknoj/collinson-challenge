@@ -1,7 +1,140 @@
 type Query {
-  "Temporary query for the workspace setup. Phase 3 removes it."
-  health: String!
+  "The scores for 1 town. Each row of the screen asks for 1 field."
+  activities(location: LocationInput!): Activities!
 }
+
+"The town from Geocoding. The backend checks the values."
+input LocationInput {
+  "Geocoding id, for the Apollo cache and the logs"
+  id: ID!
+  "From −90 to 90"
+  latitude: Float!
+  "From −180 to 180"
+  longitude: Float!
+  "m, from −500 to 9,000. For the Forecast API."
+  elevation: Float
+  "0 or more. For the town size hint. null if Geocoding has no data."
+  population: Int
+  "PPLC = capital. For the town size hint."
+  featureCode: String
+}
+
+type Activities {
+  "The same as LocationInput.id"
+  id: ID!
+  skiing: ActivityResult!
+  surfing: ActivityResult!
+  outdoor: ActivityResult!
+  indoor: IndoorResult!
+}
+
+enum ActivityStatus {
+  OK
+  NOT_APPLICABLE
+}
+
+enum Label {
+  POOR
+  FAIR
+  MODERATE
+  GOOD
+  EXCELLENT
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+type ActivityResult {
+  status: ActivityStatus!
+  "For example, NO_SEA_NEARBY"
+  notApplicableReason: Explanation
+  "null when NOT_APPLICABLE or when all days ended"
+  weeklyScore: Int
+  weeklyLabel: Label
+  "7 items. Empty when NOT_APPLICABLE."
+  days: [DayScore!]!
+  summary: [Explanation!]!
+  notes: [Explanation!]!
+}
+
+type DayScore {
+  "YYYY-MM-DD, local date of the town"
+  date: String!
+  score: Int!
+  label: Label!
+  confidence: Confidence!
+  ended: Boolean!
+  scoreBeforeGates: Int!
+  factors: [Factor!]!
+  "Only the gates with an effect"
+  gates: [Explanation!]!
+  adjustments: [Adjustment!]!
+  "The 1–2 factors that decrease the score most"
+  reasons: [Explanation!]!
+  "Notes for this day only (UV, wind direction, mountain conditions)"
+  notes: [Explanation!]!
+}
+
+type Factor {
+  key: ExplanationKey!
+  value: Float
+  "m, cm, °C, km/h or %"
+  unit: String
+  "For factors with 2 inputs (skiing sky, outdoor precipitation)"
+  params: JSON
+  "0–1"
+  subScore: Float!
+  "0–1"
+  weight: Float!
+  "weight × subScore × 100"
+  points: Float!
+}
+
+type Adjustment {
+  key: ExplanationKey!
+  points: Int!
+  params: JSON
+}
+
+type Explanation {
+  key: ExplanationKey!
+  "The values for the text template"
+  params: JSON
+  "Dates (YYYY-MM-DD), for weekly summary items"
+  days: [String!]
+}
+
+enum IndoorLevel {
+  RECOMMENDED
+  GOOD_ALTERNATIVE
+  SAVE_FOR_LATER
+}
+
+type IndoorResult {
+  "Recommended on 3 of 7 days"
+  recommendedDays: Int!
+  days: [IndoorDay!]!
+  summary: [Explanation!]!
+  "TOWN_SIZE_NO_DATA when the population is null"
+  townSize: Explanation!
+}
+
+type IndoorDay {
+  date: String!
+  level: IndoorLevel!
+  ended: Boolean!
+  outdoorScore: Int!
+  "The outdoor gate or the worst factor"
+  mainCause: Explanation
+  "TRAVEL_HINT, BUSY_HINT"
+  hints: [Explanation!]!
+}
+
+"Any JSON value. The values for a text template (params)."
+scalar JSON
 
 """
 The keys for all factors, gates, adjustments, notes, hints and summary items.

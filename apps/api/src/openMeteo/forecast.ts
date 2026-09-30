@@ -9,7 +9,7 @@ import type { ForecastLocation } from './location.js';
 import { fetchJson, responseReader } from './response.js';
 
 /** The Open-Meteo name of each hourly variable. */
-const HOURLY = {
+export const HOURLY_VARIABLES = {
   temperature: 'temperature_2m',
   apparentTemperature: 'apparent_temperature',
   precipitation: 'precipitation',
@@ -26,7 +26,7 @@ const HOURLY = {
 } as const satisfies Record<Exclude<keyof HourlyForecast, 'time'>, string>;
 
 /** The Open-Meteo name of each daily variable with a number value. */
-const DAILY = {
+export const DAILY_VARIABLES = {
   daylightDuration: 'daylight_duration',
   sunshineDuration: 'sunshine_duration',
   uvIndexMax: 'uv_index_max',
@@ -75,10 +75,10 @@ function forecastUrl({
   if (location.elevation !== null) {
     url.searchParams.set('elevation', String(location.elevation));
   }
-  url.searchParams.set('hourly', Object.values(HOURLY).join(','));
+  url.searchParams.set('hourly', Object.values(HOURLY_VARIABLES).join(','));
   url.searchParams.set(
     'daily',
-    ['sunrise', 'sunset', ...Object.values(DAILY)].join(','),
+    ['sunrise', 'sunset', ...Object.values(DAILY_VARIABLES)].join(','),
   );
   url.searchParams.set('timezone', 'auto');
   url.searchParams.set('forecast_days', String(config.forecast.forecastDays));
@@ -92,7 +92,7 @@ function parseForecast(body: unknown): Forecast {
   const hourly = read.block({ value: root.hourly, name: 'hourly' });
   const time = read.times({ source: hourly, name: 'time' });
   const hourlySeries = read.seriesGroup({
-    names: HOURLY,
+    names: HOURLY_VARIABLES,
     source: hourly,
     length: time.length,
   });
@@ -100,7 +100,11 @@ function parseForecast(body: unknown): Forecast {
   const daily = read.block({ value: root.daily, name: 'daily' });
   const date = read.times({ source: daily, name: 'time' });
   const length = date.length;
-  const dailySeries = read.seriesGroup({ names: DAILY, source: daily, length });
+  const dailySeries = read.seriesGroup({
+    names: DAILY_VARIABLES,
+    source: daily,
+    length,
+  });
 
   return {
     utcOffsetSeconds: read.number({

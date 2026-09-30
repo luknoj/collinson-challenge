@@ -18,8 +18,8 @@ This document tells the order of the work. It divides the work into phases. Each
 | 0 | Workspace setup | – | Done |
 | 1 | Scoring functions | 0 | Done |
 | 2 | Open-Meteo clients and data layer | 0 | Done |
-| 3 | GraphQL API | 1, 2 | Not started |
-| 4 | Search, header and URL | 0 | Not started |
+| 3 | GraphQL API | 1, 2 | Done |
+| 4 | Search, header and URL | 0 | Done |
 | 5 | Activity rows | 3, 4 | Not started |
 | 6 | Explanations | 5 | Not started |
 | 7 | Final checks | 6 | Not started |
