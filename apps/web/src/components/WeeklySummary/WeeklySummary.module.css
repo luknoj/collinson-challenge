@@ -5,8 +5,7 @@
 }
 
 .heading {
-  margin: 0;
-  font-size: var(--font-size-md);
+  composes: panelHeading from '../Row/Row.module.css';
 }
 
 .hint {

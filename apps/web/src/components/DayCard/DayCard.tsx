@@ -34,10 +34,12 @@ export function DayCard({
         aria-pressed={selected}
         onClick={onSelect}
       >
-        <span className={styles.day}>{dayName}</span>
+        <span className={styles.top}>
+          <span className={styles.day}>{dayName}</span>
+          {ended && <span className={styles.ended}>Ended</span>}
+        </span>
         <span className={styles.main}>{main}</span>
         <span className={styles.caption}>{caption}</span>
-        {ended && <span className={styles.ended}>Ended</span>}
       </button>
     </li>
   );

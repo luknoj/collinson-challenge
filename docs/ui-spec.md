@@ -56,13 +56,14 @@ This document tells what the user sees on the screen and what the screen does. T
 
 ## 4. Activity rows (skiing, surfing, outdoor)
 
-- **Header:** The activity name, the weekly score and the label.
+- **Header:** An icon tile, the activity name, and a pill with the weekly score and the label. The pill has the gradient of the label.
 - **Day cards:** 7 cards in 1 line. Each card shows the day name ("Today" for the first card), the score and the label.
-  - The background is a gradient from red (0) through orange and yellow to green (100).
+  - Each label has its own gradient: Poor (red), Fair (orange), Moderate (yellow), Good (light green), Excellent (green). The gradient goes from the top left to the bottom right.
+  - The card style is like an Apple widget: large round corners, a soft shadow, a light noise texture, left-aligned text and a large score. The card moves up a little on hover (not with "reduce motion").
   - The number and the label are always on the card. Thus, users with color blindness can also read the score.
   - Days 4–7 have a lighter shade, for the lower confidence.
   - An ended day is dimmed and has the text "Ended", with a popover.
-- **Default view:** The weekly summary shows under the cards.
+- **Default view:** The weekly summary shows under the cards, in an inset panel. The breakdown of a selected day uses the same panel.
 - **Selected day:** A click on a day card shows the breakdown of that day under the cards. A second click on the same card shows the weekly summary again.
 - **Breakdown:**
   ```
@@ -83,9 +84,9 @@ This document tells what the user sees on the screen and what the screen does. T
 
 - **Explanation at the top:** "Indoor sightseeing has no score. We recommend it when the outdoor weather is bad." A popover gives the full rules.
 - **Header:** "Recommended on X of 7 days".
-- **Day cards:** 3 fixed colors, not the gradient.
-  - Recommended: dark blue.
-  - Good alternative: medium blue.
+- **Day cards:** the same card style, with 1 blue gradient for each level.
+  - Recommended: dark blue to indigo.
+  - Good alternative: light blue to blue.
   - Save for later: light gray-blue.
 
   Each card shows the level text and an icon, with no number.
@@ -126,7 +127,10 @@ This document tells what the user sees on the screen and what the screen does. T
 
 - CSS modules for all components.
 - All colors and sizes are CSS custom properties in `styles/tokens.css`. The CSS modules use only these tokens.
+- The rows and the place header have the same style as the cards: large round corners, a soft shadow and no border. The loading placeholders have a soft shimmer (not with "reduce motion").
 - Light mode only. With the tokens, we can add a dark mode later with no change to the components.
 - The text on each day card must have a contrast of 4.5:1 or more (WCAG AA).
-  - The text is black or white: the color with the higher contrast. With pure black and pure white, each background gives 4.58:1 or more.
-  - The lighter cards (days 4–7) and the ended cards mix the card color with the page colors (`--card-low-confidence-strength`, `--card-ended-strength`). The text color is selected after the mix.
+  - The text is black or white: the color with the higher contrast on the 2 ends of the gradient.
+  - The lighter cards (days 4–7) and the ended cards mix the card colors with the page colors (`--card-low-confidence-strength`, `--card-ended-strength`). The text color is selected after the mix.
+  - When you change a gradient, make sure that each card still has 4.5:1 or more. Now, the lowest contrast is 4.80:1 (Excellent, black text).
+  - The noise texture changes the brightness of the gradient only a little (`--card-noise-opacity`). The contrast values above do not include it. If you make the noise stronger, check the contrast again.

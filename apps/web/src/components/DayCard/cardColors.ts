@@ -1,14 +1,18 @@
-// The colors of a day card. The values come from styles/tokens.css. The text
-// color is black or white: the one with the higher contrast (ui-spec.md,
-// section 8).
+// The colors of a day card. Each label and each indoor level has a gradient
+// in styles/tokens.css. The text color is black or white: the one with the
+// higher contrast on the 2 ends of the gradient (ui-spec.md, section 8).
 
-import type { Confidence, IndoorLevel } from '../../generated/graphql';
+import type { Confidence, IndoorLevel, Label } from '../../generated/graphql';
 import { contrast, mix, parseHex, toCss, type Rgb } from '../../utils/color';
 
+interface Gradient {
+  from: Rgb;
+  to: Rgb;
+}
+
 export interface CardTokens {
-  /** The score gradient, from 0 to 100. */
-  scale: readonly { at: number; color: Rgb }[];
-  indoor: Record<IndoorLevel, Rgb>;
+  labels: Record<Label, Gradient>;
+  indoor: Record<IndoorLevel, Gradient>;
   surface: Rgb;
   background: Rgb;
   textDark: Rgb;
@@ -20,9 +24,10 @@ export interface CardTokens {
 }
 
 export interface CardColors {
+  /** A CSS linear-gradient. */
   background: string;
   color: string;
-  /** The contrast ratio of the text. */
+  /** The lowest contrast ratio of the text on the gradient. */
   contrast: number;
 }
 
@@ -30,15 +35,22 @@ export interface CardColors {
 export function readCardTokens(read: (name: string) => string): CardTokens {
   const color = (name: string) => parseHex(read(name));
   const percent = (name: string) => Number.parseFloat(read(name)) / 100;
+  const gradient = (name: string): Gradient => ({
+    from: color(`--card-${name}-from`),
+    to: color(`--card-${name}-to`),
+  });
   return {
-    scale: [0, 25, 50, 75, 100].map((at) => ({
-      at,
-      color: color(`--score-${at}`),
-    })),
+    labels: {
+      POOR: gradient('poor'),
+      FAIR: gradient('fair'),
+      MODERATE: gradient('moderate'),
+      GOOD: gradient('good'),
+      EXCELLENT: gradient('excellent'),
+    },
     indoor: {
-      RECOMMENDED: color('--indoor-recommended'),
-      GOOD_ALTERNATIVE: color('--indoor-good-alternative'),
-      SAVE_FOR_LATER: color('--indoor-save-for-later'),
+      RECOMMENDED: gradient('recommended'),
+      GOOD_ALTERNATIVE: gradient('good-alternative'),
+      SAVE_FOR_LATER: gradient('save-for-later'),
     },
     surface: color('--color-surface'),
     background: color('--color-bg'),
@@ -59,73 +71,89 @@ function tokensOfPage(): CardTokens {
   return pageTokens;
 }
 
-/** The color on the gradient for a score from 0 to 100. */
-function scaleColor({
-  score,
-  tokens,
+/** Mixes the 2 ends of a gradient with a base color. */
+function mixGradient({
+  gradient,
+  base,
+  strength,
 }: {
-  score: number;
-  tokens: CardTokens;
-}): Rgb {
-  let from = tokens.scale[0];
-  for (const to of tokens.scale) {
-    if (from !== undefined && score <= to.at) {
-      if (to.at === from.at) return to.color;
-      return mix({
-        color: to.color,
-        base: from.color,
-        strength: (score - from.at) / (to.at - from.at),
-      });
-    }
-    from = to;
-  }
-  if (from === undefined) throw new Error('The score gradient has no colors.');
-  return from.color;
+  gradient: Gradient;
+  base: Rgb;
+  strength: number;
+}): Gradient {
+  return {
+    from: mix({ color: gradient.from, base, strength }),
+    to: mix({ color: gradient.to, base, strength }),
+  };
 }
 
 function withText({
-  color,
+  gradient,
   tokens,
 }: {
-  color: Rgb;
+  gradient: Gradient;
   tokens: CardTokens;
 }): CardColors {
-  const dark = contrast({ a: color, b: tokens.textDark });
-  const light = contrast({ a: color, b: tokens.textLight });
+  const lowest = (text: Rgb) =>
+    Math.min(
+      contrast({ a: gradient.from, b: text }),
+      contrast({ a: gradient.to, b: text }),
+    );
+  const dark = lowest(tokens.textDark);
+  const light = lowest(tokens.textLight);
   return {
-    background: toCss(color),
+    background: `linear-gradient(135deg, ${toCss(gradient.from)}, ${toCss(gradient.to)})`,
     color: toCss(dark >= light ? tokens.textDark : tokens.textLight),
     contrast: Math.max(dark, light),
   };
 }
 
-export function scoreCardColors({
-  score,
-  confidence,
+function cardColors({
+  gradient,
+  lowConfidence,
   ended,
-  tokens = tokensOfPage(),
+  tokens,
 }: {
-  score: number;
-  confidence: Confidence;
+  gradient: Gradient;
+  lowConfidence: boolean;
   ended: boolean;
-  tokens?: CardTokens;
+  tokens: CardTokens;
 }): CardColors {
-  let color = scaleColor({ score, tokens });
-  if (confidence !== 'HIGH') {
-    color = mix({
-      color,
+  let result = gradient;
+  if (lowConfidence) {
+    result = mixGradient({
+      gradient: result,
       base: tokens.surface,
       strength: tokens.lowConfidenceStrength,
     });
   }
   if (ended) {
-    color = mix({
-      color,
+    result = mixGradient({
+      gradient: result,
       base: tokens.background,
       strength: tokens.endedStrength,
     });
   }
-  return withText({ color, tokens });
+  return withText({ gradient: result, tokens });
+}
+
+export function scoreCardColors({
+  label,
+  confidence,
+  ended,
+  tokens = tokensOfPage(),
+}: {
+  label: Label;
+  confidence: Confidence;
+  ended: boolean;
+  tokens?: CardTokens;
+}): CardColors {
+  return cardColors({
+    gradient: tokens.labels[label],
+    lowConfidence: confidence !== 'HIGH',
+    ended,
+    tokens,
+  });
 }
 
 export function indoorCardColors({
@@ -137,12 +165,10 @@ export function indoorCardColors({
   ended: boolean;
   tokens?: CardTokens;
 }): CardColors {
-  const color = ended
-    ? mix({
-        color: tokens.indoor[level],
-        base: tokens.background,
-        strength: tokens.endedStrength,
-      })
-    : tokens.indoor[level];
-  return withText({ color, tokens });
+  return cardColors({
+    gradient: tokens.indoor[level],
+    lowConfidence: false,
+    ended,
+    tokens,
+  });
 }

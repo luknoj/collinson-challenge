@@ -9,9 +9,9 @@ import { useRowQueries } from './useRowQueries';
 type RowName = 'skiing' | 'surfing' | 'outdoor' | 'indoor';
 
 const ACTIVITY_ROWS = [
-  { name: 'skiing', title: 'Skiing' },
-  { name: 'surfing', title: 'Surfing' },
-  { name: 'outdoor', title: 'Outdoor sightseeing' },
+  { name: 'skiing', title: 'Skiing', icon: '⛷️' },
+  { name: 'surfing', title: 'Surfing', icon: '🏄' },
+  { name: 'outdoor', title: 'Outdoor sightseeing', icon: '🗺️' },
 ] as const;
 
 const rowId = (name: RowName) => `row-${name}`;
@@ -53,11 +53,12 @@ export function ActivityRows({ place }: { place: Place }) {
 
   return (
     <div className={styles.rows}>
-      {ACTIVITY_ROWS.map(({ name, title }) => (
+      {ACTIVITY_ROWS.map(({ name, title, icon }) => (
         <ActivityRow
           key={name}
           id={rowId(name)}
           title={title}
+          icon={icon}
           placeName={place.name}
           query={queries[name]}
           selectedDate={selected[name]}

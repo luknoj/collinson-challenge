@@ -2,7 +2,7 @@ import type {
   DayScoreFieldsFragment,
   IndoorRowQuery,
 } from '../../generated/graphql';
-import { explanationText, labelText, levelText } from '../../text/simpleText';
+import { explanationText, LABELS, LEVELS } from '../../text/simpleText';
 import { formatDate } from '../../utils/time';
 import { ExplanationList } from '../Explanation/ExplanationList';
 import styles from './IndoorRow.module.css';
@@ -22,11 +22,11 @@ export function IndoorDayBreakdown({
   outdoorDay,
   onShowOutdoorDay,
 }: IndoorDayBreakdownProps) {
-  const outdoorLabel = outdoorDay ? ` ${labelText(outdoorDay.label)}` : '';
+  const outdoorLabel = outdoorDay ? ` ${LABELS[outdoorDay.label]}` : '';
   return (
     <div className={styles.summary}>
-      <h4 className={styles.heading}>
-        {formatDate(day.date)} — Indoor: {levelText(day.level)}
+      <h4 className={styles.dayHeading}>
+        {formatDate(day.date)} — Indoor: {LEVELS[day.level]}
         {day.ended && ', ended'}
       </h4>
       <p className={styles.line}>

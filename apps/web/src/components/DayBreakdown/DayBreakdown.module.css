@@ -7,11 +7,11 @@
 .heading {
   margin: 0;
   font-size: var(--font-size-md);
+  font-weight: 600;
 }
 
 .subheading {
-  margin: 0;
-  font-size: var(--font-size-sm);
+  composes: panelHeading from '../Row/Row.module.css';
 }
 
 .factors {
@@ -40,21 +40,23 @@
 
 .track {
   grid-area: bar;
-  height: 10px;
+  height: 8px;
   overflow: hidden;
-  border-radius: var(--radius-sm);
-  background: var(--color-highlight);
+  border-radius: var(--radius-pill);
+  background: var(--color-divider);
 }
 
 .indicator {
   height: 100%;
-  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+  background: var(--gradient-meter);
 }
 
 .points {
   grid-area: points;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
 }
 
 .lines {

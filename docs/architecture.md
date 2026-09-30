@@ -95,7 +95,7 @@ apps/web/src/
     SearchBox/              Base UI Combobox, useTownSearch (300 ms delay, cancel)
     PlaceHeader/
     ActivityRows/           the 4 rows, useRowQueries (placeholders until all 4 settle)
-    Row/                    the frame of a row, the placeholder, "Data not available"
+    Row/                    the frame of a row, the badge, the panel, the placeholder, "Data not available"
     ActivityRow/            header, day cards, summary or breakdown
     DayCard/                1 day, cardColors (gradient, text color with the higher contrast)
     DayBreakdown/           factors (Base UI Meter), adjustments, gates
@@ -385,7 +385,7 @@ The generated files are not in git. Thus, run `pnpm codegen` (or a command that 
 | 2 | Repository | pnpm workspace: `apps/web` (Vite) and `apps/api`. | Section 2 |
 | 3 | GraphQL server | Apollo Server, schema-first, GraphQL Code Generator. | Sections 1, 5 |
 | 4 | Search | Suggestions (2 characters or more, 300 ms delay), then a selection. The Geocoding `id` identifies the town. The frontend calls Geocoding directly. | [UI 2](ui-spec.md#2-search) |
-| 5 | Layout | 1 full-width row for each activity. 7 day cards with a gradient, a score and a label. | [UI 1](ui-spec.md#1-screen), [UI 4](ui-spec.md#4-activity-rows-skiing-surfing-outdoor) |
+| 5 | Layout | 1 full-width row for each activity. 7 day cards with a gradient for each label, a score and a label. | [UI 1](ui-spec.md#1-screen), [UI 4](ui-spec.md#4-activity-rows-skiing-surfing-outdoor) |
 | 6 | Day details | Full breakdown: factors, gates and adjustments. | [UI 4](ui-spec.md#4-activity-rows-skiing-surfing-outdoor) |
 | 7 | Weekly summary | The default view. Rules and structured items from the backend. | Section 4.6 |
 | 8 | Indoor | 3 fixed blue colors. "Recommended on X of 7 days". An explanation at the top. The optional value is not in the API or the UI. | [UI 5](ui-spec.md#5-indoor-row) |

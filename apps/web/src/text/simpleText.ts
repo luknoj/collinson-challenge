@@ -10,7 +10,7 @@ import type {
 import { formatNumber } from '../utils/number';
 import { formatDayName } from '../utils/time';
 
-const LABELS: Record<Label, string> = {
+export const LABELS: Record<Label, string> = {
   POOR: 'Poor',
   FAIR: 'Fair',
   MODERATE: 'Moderate',
@@ -18,19 +18,11 @@ const LABELS: Record<Label, string> = {
   EXCELLENT: 'Excellent',
 };
 
-const LEVELS: Record<IndoorLevel, string> = {
+export const LEVELS: Record<IndoorLevel, string> = {
   RECOMMENDED: 'Recommended',
   GOOD_ALTERNATIVE: 'Good alternative',
   SAVE_FOR_LATER: 'Save for later',
 };
-
-export function labelText(label: Label): string {
-  return LABELS[label];
-}
-
-export function levelText(level: IndoorLevel): string {
-  return LEVELS[level];
-}
 
 /** RAIN_ON_SNOW_GATE → "Rain on snow gate". */
 export function keyText(key: ExplanationKey): string {

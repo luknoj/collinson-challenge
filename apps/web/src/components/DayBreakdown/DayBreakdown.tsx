@@ -3,7 +3,7 @@ import type { DayScoreFieldsFragment } from '../../generated/graphql';
 import {
   explanationText,
   keyText,
-  labelText,
+  LABELS,
   paramsText,
 } from '../../text/simpleText';
 import { formatNumber } from '../../utils/number';
@@ -26,7 +26,7 @@ export function DayBreakdown({ activity, placeName, day }: DayBreakdownProps) {
     <div className={styles.breakdown}>
       <h4 className={styles.heading}>
         {formatDate(day.date)} — {placeName}, {activity} {day.score}{' '}
-        {labelText(day.label)} (confidence: {day.confidence.toLowerCase()})
+        {LABELS[day.label]} (confidence: {day.confidence.toLowerCase()})
         {day.ended && ', ended'}
       </h4>
 
