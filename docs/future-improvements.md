@@ -74,16 +74,7 @@ This document lists known problems in the plan and ideas for later versions.
 
 ## 3. Frontend (ui-spec.md)
 
-### 3.1 Search cancellation
-
-- **Location:** [ui-spec.md](ui-spec.md), section 2.
-- **Problem:** The plan cancels a request only when a new request starts. An old response can arrive during the 300 ms delay, or after the user clears the field. Then the list shows old suggestions.
-- **Correction:**
-  - Cancel the open request when the text changes, not when the next request starts.
-  - Accept a response only if its search text is the same as the current text in the field.
-  - When the field is empty, close the list and cancel the open request.
-
-### 3.2 Back and forward buttons
+### 3.1 Back and forward buttons
 
 - **Location:** [ui-spec.md](ui-spec.md), section 3.
 - **Problem:** The plan uses `history.pushState`. But the app has no `popstate` handler. Thus, the "back" button changes the URL, but the screen does not change.
@@ -91,21 +82,6 @@ This document lists known problems in the plan and ideas for later versions.
   - Add a `popstate` handler. It reads `place` from the URL and loads that town.
   - Clear the selected day when the town changes.
   - Do not let an old `/get` response replace a newer town. Keep the `id` of the current request. Ignore a response for a different `id`.
-
-### 3.3 Geocoding failures and missing fields
-
-- **Location:** [architecture.md](architecture.md), section 4.2, and [ui-spec.md](ui-spec.md), section 2.
-- **Problem:** The frontend now calls Geocoding. But the plan does not give frontend rules for these cases:
-  - The search request fails.
-  - The `/get` request fails.
-  - A response does not have optional fields.
-  - The user selects towns quickly, one after another.
-- **Open-Meteo does not include empty fields in the response.** For example, a place with no population data has no `population` field. The field is not `null`. Refer to the [Geocoding API documentation](https://open-meteo.com/en/docs/geocoding-api).
-- **Correction:**
-  - Search failure: the list shows "The search is not available. Try again."
-  - `/get` failure: refer to [architecture.md](architecture.md), section 4.2.
-  - Missing fields: change a missing `population`, `elevation`, `admin1` or `feature_code` to `null` before you send the GraphQL input or show the header.
-  - Quick town changes: use the rule in 3.2 (ignore responses for an old `id`).
 
 ## 4. Data sources for later
 
