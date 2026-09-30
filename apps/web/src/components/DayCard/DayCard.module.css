@@ -9,29 +9,19 @@
   list-style: none;
 }
 
-.item {
-  display: flex;
-  min-width: 0;
-}
-
 /* The style of an Apple widget: a gradient, large round corners, a soft shadow. */
 .card {
   position: relative;
   /* The noise layer blends only with the card. */
   isolation: isolate;
   display: flex;
-  flex: 1;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-1);
+  min-width: 0;
   min-height: 120px;
   padding: var(--space-3) var(--space-3) var(--space-4);
-  border: none;
   border-radius: var(--radius-card);
-  font: inherit;
-  text-align: left;
   box-shadow: var(--shadow-card);
-  cursor: pointer;
   transition:
     transform 160ms ease,
     box-shadow 160ms ease;
@@ -60,12 +50,7 @@
   transform: scale(0.98);
 }
 
-.card[aria-pressed='true'] {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-}
-
-.card:focus-visible {
+.card[data-selected] {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
@@ -76,7 +61,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-1);
-  width: 100%;
 }
 
 .day {
@@ -86,16 +70,51 @@
   text-transform: uppercase;
 }
 
+/* Above the select button, so that a click opens the popover. */
 .ended {
+  position: relative;
+  z-index: 1;
   padding: 0 var(--space-2);
   border: 1px solid currentcolor;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
+/* The select button covers the full card with its ::after layer. */
+.select {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.select::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  content: '';
+}
+
+.select:focus-visible {
+  outline: none;
+}
+
+.select:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
 .main {
-  margin-top: auto;
   font-size: var(--font-size-2xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -106,6 +125,15 @@
 .caption {
   font-size: var(--font-size-sm);
   font-weight: 500;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -127,7 +155,7 @@
     scroll-snap-type: x mandatory;
   }
 
-  .item {
+  .card {
     scroll-snap-align: start;
   }
 }

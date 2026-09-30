@@ -1,14 +1,11 @@
 import { Meter } from '@base-ui/react/meter';
 import type { DayScoreFieldsFragment } from '../../generated/graphql';
-import {
-  explanationText,
-  keyText,
-  LABELS,
-  paramsText,
-} from '../../text/simpleText';
-import { formatNumber } from '../../utils/number';
+import { LABELS } from '../../text/labels';
+import { TERMS } from '../../text/templates';
 import { formatDate } from '../../utils/time';
+import { Explanation, type ExplanationData } from '../Explanation/Explanation';
 import { ExplanationList } from '../Explanation/ExplanationList';
+import { InfoPopover } from '../Explanation/InfoPopover';
 import styles from './DayBreakdown.module.css';
 
 type Factor = DayScoreFieldsFragment['factors'][number];
@@ -26,8 +23,17 @@ export function DayBreakdown({ activity, placeName, day }: DayBreakdownProps) {
     <div className={styles.breakdown}>
       <h4 className={styles.heading}>
         {formatDate(day.date)} — {placeName}, {activity} {day.score}{' '}
-        {LABELS[day.label]} (confidence: {day.confidence.toLowerCase()})
-        {day.ended && ', ended'}
+        {LABELS[day.label]} (
+        <InfoPopover
+          {...TERMS.CONFIDENCE}
+          label={`confidence: ${day.confidence.toLowerCase()}`}
+        />
+        )
+        {day.ended && (
+          <>
+            , <InfoPopover {...TERMS.ENDED} label="ended" />
+          </>
+        )}
       </h4>
 
       <div className={styles.factors}>
@@ -41,8 +47,10 @@ export function DayBreakdown({ activity, placeName, day }: DayBreakdownProps) {
           {day.adjustments.map((adjustment) => (
             <li key={adjustment.key}>
               {adjustment.points > 0 ? '+' : ''}
-              {adjustment.points} {keyText(adjustment.key)}
-              {adjustment.params && ` (${paramsText(adjustment.params)})`}
+              {adjustment.points}{' '}
+              <Explanation
+                explanation={{ key: adjustment.key, params: adjustment.params }}
+              />
             </li>
           ))}
         </ul>
@@ -55,7 +63,7 @@ export function DayBreakdown({ activity, placeName, day }: DayBreakdownProps) {
           {day.gates.map((gate) => (
             <li key={gate.key} className={styles.gate}>
               <span aria-hidden="true">⚠ </span>
-              {explanationText(gate)}
+              <Explanation explanation={gate} />
             </li>
           ))}
         </ul>
@@ -81,6 +89,11 @@ export function DayBreakdown({ activity, placeName, day }: DayBreakdownProps) {
 function FactorBar({ factor }: { factor: Factor }) {
   const max = Math.round(factor.weight * 100);
   const points = factor.points.toFixed(1);
+  // The same params as in the reasons: the value, the unit and the inputs.
+  const explanation: ExplanationData = {
+    key: factor.key,
+    params: { value: factor.value, unit: factor.unit, ...factor.params },
+  };
   return (
     <Meter.Root
       className={styles.factor}
@@ -88,8 +101,12 @@ function FactorBar({ factor }: { factor: Factor }) {
       max={max}
       aria-valuetext={`${points} of ${max} points`}
     >
-      <Meter.Label className={styles.name}>{keyText(factor.key)}</Meter.Label>
-      <span className={styles.value}>{factorValue(factor)}</span>
+      <Meter.Label className={styles.name}>
+        <Explanation explanation={explanation} part="title" />
+      </Meter.Label>
+      <span className={styles.value}>
+        <Explanation explanation={explanation} part="value" />
+      </span>
       <Meter.Track className={styles.track}>
         <Meter.Indicator className={styles.indicator} />
       </Meter.Track>
@@ -98,11 +115,4 @@ function FactorBar({ factor }: { factor: Factor }) {
       </span>
     </Meter.Root>
   );
-}
-
-/** "0.6 m". A factor with 2 inputs shows its params. */
-function factorValue(factor: Factor): string {
-  if (factor.value === null) return paramsText(factor.params) || 'no data';
-  const value = formatNumber(factor.value);
-  return factor.unit ? `${value} ${factor.unit}` : value;
 }

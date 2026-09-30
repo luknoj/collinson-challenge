@@ -2,12 +2,15 @@ import type {
   DayScoreFieldsFragment,
   IndoorLevel,
 } from '../../generated/graphql';
-import { explanationText, LEVELS } from '../../text/simpleText';
+import { LEVELS } from '../../text/labels';
+import { TERMS } from '../../text/templates';
 import { formatDayName } from '../../utils/time';
 import type { IndoorQuery } from '../ActivityRows/useRowQueries';
 import { indoorCardColors } from '../DayCard/cardColors';
 import { DayCard, DayCardList } from '../DayCard/DayCard';
+import { Explanation } from '../Explanation/Explanation';
 import { ExplanationList } from '../Explanation/ExplanationList';
+import { InfoPopover } from '../Explanation/InfoPopover';
 import { Row, RowBadge, RowFailure, RowPanel } from '../Row/Row';
 import { IndoorDayBreakdown } from './IndoorDayBreakdown';
 import styles from './IndoorRow.module.css';
@@ -67,7 +70,7 @@ export function IndoorRow({
     >
       <p className={styles.intro}>
         Indoor sightseeing has no score. We recommend it when the outdoor
-        weather is bad.
+        weather is bad. <InfoPopover {...TERMS.INDOOR} label="How it works" />
       </p>
       <DayCardList label={`${TITLE}: 7 days`}>
         {result.days.map((day, i) => (
@@ -99,7 +102,9 @@ export function IndoorRow({
             <p className={styles.hint}>Select a day to see its breakdown.</p>
           </>
         )}
-        <p className={styles.townSize}>{explanationText(result.townSize)}</p>
+        <p className={styles.townSize}>
+          <Explanation explanation={result.townSize} />
+        </p>
       </RowPanel>
     </Row>
   );

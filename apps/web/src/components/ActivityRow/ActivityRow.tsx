@@ -1,9 +1,10 @@
-import { explanationText, LABELS } from '../../text/simpleText';
+import { LABELS } from '../../text/labels';
 import { formatDayName } from '../../utils/time';
 import type { ActivityQuery } from '../ActivityRows/useRowQueries';
 import { DayBreakdown } from '../DayBreakdown/DayBreakdown';
 import { scoreCardColors } from '../DayCard/cardColors';
 import { DayCard, DayCardList } from '../DayCard/DayCard';
+import { Explanation } from '../Explanation/Explanation';
 import { Row, RowBadge, RowFailure, RowPanel } from '../Row/Row';
 import { WeeklySummary } from '../WeeklySummary/WeeklySummary';
 import styles from './ActivityRow.module.css';
@@ -51,7 +52,7 @@ export function ActivityRow({
       >
         {result.notApplicableReason && (
           <p className={styles.reason}>
-            {explanationText(result.notApplicableReason)}
+            <Explanation explanation={result.notApplicableReason} />
           </p>
         )}
       </Row>

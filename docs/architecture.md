@@ -101,11 +101,12 @@ apps/web/src/
     DayBreakdown/           factors (Base UI Meter), adjustments, gates
     WeeklySummary/
     IndoorRow/              level cards, IndoorDayBreakdown
-    Explanation/            ExplanationList; phase 6 adds the text with a popover
-    HowScoresWork/          side panel (Base UI Drawer)
+    Explanation/            Explanation (template text), ExplanationList, InfoPopover (Base UI Popover)
+    HowScoresWork/          side panel (Base UI Drawer), the handle for the "More" links
   text/
-    simpleText.ts           simple text for phase 5 (phase 6 replaces it)
-    templates.ts            1 text template for each ExplanationKey
+    templates.ts            1 text template for each ExplanationKey, the panel sections
+    params.ts               reads the params (1 function for each unit)
+    labels.ts               the names of the labels and the indoor levels
   url/
     placeUrl.ts             read and write ?place= and &name=
   utils/

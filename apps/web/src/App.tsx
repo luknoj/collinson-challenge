@@ -1,5 +1,6 @@
 import styles from './App.module.css';
 import { ActivityRows } from './components/ActivityRows/ActivityRows';
+import { HowScoresWork } from './components/HowScoresWork/HowScoresWork';
 import { PlaceHeader } from './components/PlaceHeader/PlaceHeader';
 import { SearchBox } from './components/SearchBox/SearchBox';
 import { usePlace, type PlaceState } from './place/usePlace';
@@ -18,6 +19,7 @@ export function App() {
       <section className={styles.content} aria-live="polite">
         <Content state={state} retry={retry} />
       </section>
+      <HowScoresWork />
     </main>
   );
 }

@@ -78,4 +78,8 @@
   --shadow-popup: 0 4px 16px rgb(27 31 36 / 12%);
   --focus-ring: 0 0 0 3px rgb(31 95 191 / 30%);
   --layout-max-width: 1120px;
+
+  /* Layers */
+  --z-drawer: 40;
+  --z-popover: 50;
 }
