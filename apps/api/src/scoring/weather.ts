@@ -1,4 +1,4 @@
-// Normalized weather model. The Open-Meteo clients (phase 2) make it.
+// Normalized weather model. The Open-Meteo clients (src/openMeteo) make it.
 // All times are local times of the town: "YYYY-MM-DDTHH:mm".
 // Instant values (for example, temperature) are for the time stamp.
 // Amounts and maximums (precipitation, rain, snowfall, precipitation
@@ -70,6 +70,19 @@ export interface MarineHourly {
   windWaveHeight: Series;
   /** °C */
   seaSurfaceTemperature: Series;
+}
+
+/**
+ * The Marine API gives only null values for a place far from the sea
+ * (scoring-evidence.md, "Coast check").
+ */
+export function isMarineEmpty(marine: MarineHourly): boolean {
+  return [
+    marine.swellWaveHeight,
+    marine.swellWavePeriod,
+    marine.windWaveHeight,
+    marine.seaSurfaceTemperature,
+  ].every((series) => series.every((v) => v === null));
 }
 
 export interface RingPoint {

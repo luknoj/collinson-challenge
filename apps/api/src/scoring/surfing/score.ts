@@ -20,11 +20,12 @@ import type {
   DayScore,
   Explanation,
 } from '../types.js';
-import type {
-  Forecast,
-  MarineHourly,
-  ScoringContext,
-  Terrain,
+import {
+  isMarineEmpty,
+  type Forecast,
+  type MarineHourly,
+  type ScoringContext,
+  type Terrain,
 } from '../weather.js';
 import {
   estimateCoastDirection,
@@ -49,7 +50,7 @@ export function scoreSurfing({
   terrain,
   config = surfingConfig,
 }: SurfingInput): ActivityResult {
-  if (marine === null || isAllNull(marine)) {
+  if (marine === null || isMarineEmpty(marine)) {
     return notApplicable({ reason: { key: 'NO_SEA_NEARBY' } });
   }
 
@@ -99,15 +100,6 @@ export function scoreSurfing({
     }),
   );
   return buildActivityResult({ days, notes });
-}
-
-function isAllNull(marine: MarineHourly): boolean {
-  return [
-    marine.swellWaveHeight,
-    marine.swellWavePeriod,
-    marine.windWaveHeight,
-    marine.seaSurfaceTemperature,
-  ].every((series) => series.every((v) => v === null));
 }
 
 /**
