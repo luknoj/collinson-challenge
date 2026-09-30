@@ -1,0 +1,57 @@
+.intro {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.heading {
+  composes: panelHeading from '../Row/Row.module.css';
+}
+
+/* The first line of the day breakdown */
+.dayHeading {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.subheading {
+  composes: panelHeading from '../Row/Row.module.css';
+}
+
+.line {
+  margin: 0;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.townSize {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-divider);
+  color: var(--color-text-muted);
+}
+
+.link {
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: var(--color-accent);
+  text-decoration: underline;
+  background: none;
+  cursor: pointer;
+}
+
+.link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

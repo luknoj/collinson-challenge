@@ -9,17 +9,36 @@
   --color-highlight: #eaf0fa;
   --color-danger: #b3261e;
 
-  /* Score gradient, from 0 (Poor) to 100 (Excellent) */
-  --score-0: #c62828;
-  --score-25: #ef6c00;
-  --score-50: #f9a825;
-  --score-75: #7cb342;
-  --score-100: #2e7d32;
-
-  /* Indoor recommendation levels */
-  --indoor-recommended: #1e3a8a;
-  --indoor-good-alternative: #3b6fd8;
-  --indoor-save-for-later: #c9d3e3;
+  /*
+   * Day cards. Each label and each indoor level has a gradient, from the top
+   * left (from) to the bottom right (to). The text is black or white: the
+   * color with the higher contrast on the 2 ends of the gradient. Each card
+   * has a contrast of 4.5:1 or more (ui-spec.md, section 8).
+   */
+  --color-card-text-dark: #000000;
+  --color-card-text-light: #ffffff;
+  --card-poor-from: #cf2e3e;
+  --card-poor-to: #9c142c;
+  --card-fair-from: #ffa94d;
+  --card-fair-to: #f76707;
+  --card-moderate-from: #ffe066;
+  --card-moderate-to: #fab005;
+  --card-good-from: #a9e34b;
+  --card-good-to: #5cb82e;
+  --card-excellent-from: #20c997;
+  --card-excellent-to: #0b8a5a;
+  --card-recommended-from: #4a5bd4;
+  --card-recommended-to: #2e2a9e;
+  --card-good-alternative-from: #8ec5ff;
+  --card-good-alternative-to: #4c8fe8;
+  --card-save-for-later-from: #eef2f7;
+  --card-save-for-later-to: #d3dbe7;
+  /* Texture on the cards: grayscale noise, blended with the gradient. */
+  --card-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --card-noise-opacity: 0.25;
+  /* Lighter days (days 4–7) and ended days: the part of the card color. */
+  --card-low-confidence-strength: 60%;
+  --card-ended-strength: 35%;
 
   /* Spacing */
   --space-1: 4px;
@@ -33,6 +52,7 @@
   --font-family:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.25rem;
@@ -41,6 +61,20 @@
   /* Shape and layout */
   --radius-sm: 6px;
   --radius-md: 12px;
+  --radius-card: 18px;
+  --radius-row: 22px;
+  --radius-panel: 14px;
+  --radius-pill: 999px;
+  --shadow-row: 0 1px 2px rgb(27 31 36 / 4%), 0 8px 24px rgb(27 31 36 / 6%);
+  --color-panel: #f3f5f8;
+  --color-divider: #e6e9ee;
+  --gradient-meter: linear-gradient(90deg, #5b8def, var(--color-accent));
+  --shadow-card:
+    inset 0 1px 0 rgb(255 255 255 / 30%), 0 1px 2px rgb(27 31 36 / 8%),
+    0 6px 16px rgb(27 31 36 / 10%);
+  --shadow-card-hover:
+    inset 0 1px 0 rgb(255 255 255 / 30%), 0 2px 4px rgb(27 31 36 / 10%),
+    0 12px 28px rgb(27 31 36 / 16%);
   --shadow-popup: 0 4px 16px rgb(27 31 36 / 12%);
   --focus-ring: 0 0 0 3px rgb(31 95 191 / 30%);
   --layout-max-width: 1120px;

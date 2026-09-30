@@ -1,0 +1,89 @@
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.subheading {
+  composes: panelHeading from '../Row/Row.module.css';
+}
+
+.factors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.factor {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(9rem, 1.4fr) 2fr 5.5rem;
+  grid-template-areas: 'name value bar points';
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.name {
+  grid-area: name;
+  font-weight: 600;
+}
+
+.value {
+  grid-area: value;
+  color: var(--color-text-muted);
+}
+
+.track {
+  grid-area: bar;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-divider);
+}
+
+.indicator {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-meter);
+}
+
+.points {
+  grid-area: points;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.total {
+  margin: 0;
+  font-weight: 600;
+}
+
+.gate {
+  color: var(--color-danger);
+}
+
+@media (width < 640px) {
+  .factor {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'name points'
+      'value value'
+      'bar bar';
+    gap: var(--space-1) var(--space-2);
+  }
+}

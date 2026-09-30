@@ -1,4 +1,5 @@
 import styles from './App.module.css';
+import { ActivityRows } from './components/ActivityRows/ActivityRows';
 import { PlaceHeader } from './components/PlaceHeader/PlaceHeader';
 import { SearchBox } from './components/SearchBox/SearchBox';
 import { usePlace, type PlaceState } from './place/usePlace';
@@ -33,7 +34,12 @@ function Content({ state, retry }: { state: PlaceState; retry: () => void }) {
     case 'loading':
       return <div className={styles.placeholder} aria-busy="true" />;
     case 'ready':
-      return <PlaceHeader place={state.place} />;
+      return (
+        <>
+          <PlaceHeader place={state.place} />
+          <ActivityRows key={state.place.id} place={state.place} />
+        </>
+      );
     case 'notFound':
       return (
         <p className={styles.message} role="alert">
