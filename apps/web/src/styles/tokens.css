@@ -9,6 +9,16 @@
   --color-highlight: #eaf0fa;
   --color-danger: #b3261e;
 
+  /*
+   * Text on the day cards. The cards use the color with the higher contrast.
+   * With pure black and pure white, each background gives 4.58:1 or more.
+   */
+  --color-card-text-dark: #000000;
+  --color-card-text-light: #ffffff;
+  /* Lighter days (days 4–7) and ended days: the part of the card color. */
+  --card-low-confidence-strength: 60%;
+  --card-ended-strength: 35%;
+
   /* Score gradient, from 0 (Poor) to 100 (Excellent) */
   --score-0: #c62828;
   --score-25: #ef6c00;

@@ -1,0 +1,112 @@
+# 1 query for each row (architecture.md, section 3). The rows send the queries
+# in parallel. The data layer on the backend joins the Open-Meteo calls.
+
+fragment ExplanationFields on Explanation {
+  key
+  params
+  days
+}
+
+fragment DayScoreFields on DayScore {
+  date
+  score
+  label
+  confidence
+  ended
+  scoreBeforeGates
+  factors {
+    key
+    value
+    unit
+    params
+    subScore
+    weight
+    points
+  }
+  gates {
+    ...ExplanationFields
+  }
+  adjustments {
+    key
+    points
+    params
+  }
+  reasons {
+    ...ExplanationFields
+  }
+  notes {
+    ...ExplanationFields
+  }
+}
+
+fragment ActivityResultFields on ActivityResult {
+  status
+  notApplicableReason {
+    ...ExplanationFields
+  }
+  weeklyScore
+  weeklyLabel
+  days {
+    ...DayScoreFields
+  }
+  summary {
+    ...ExplanationFields
+  }
+  notes {
+    ...ExplanationFields
+  }
+}
+
+query SkiingRow($location: LocationInput!) {
+  activities(location: $location) {
+    id
+    skiing {
+      ...ActivityResultFields
+    }
+  }
+}
+
+query SurfingRow($location: LocationInput!) {
+  activities(location: $location) {
+    id
+    surfing {
+      ...ActivityResultFields
+    }
+  }
+}
+
+query OutdoorRow($location: LocationInput!) {
+  activities(location: $location) {
+    id
+    outdoor {
+      ...ActivityResultFields
+    }
+  }
+}
+
+query IndoorRow($location: LocationInput!) {
+  activities(location: $location) {
+    id
+    indoor {
+      recommendedDays
+      days {
+        date
+        level
+        ended
+        outdoorScore
+        mainCause {
+          ...ExplanationFields
+        }
+        hints {
+          ...ExplanationFields
+        }
+      }
+      summary {
+        ...ExplanationFields
+      }
+      townSize {
+        ...ExplanationFields
+      }
+    }
+  }
+}

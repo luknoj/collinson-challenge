@@ -119,6 +119,7 @@ This document tells what the user sees on the screen and what the screen does. T
 
 - The rows use the full width.
 - The day cards scroll horizontally, with scroll snap. Approximately 3.5 cards show, so the user sees that there are more cards.
+- The phone layout starts below a width of 640 px.
 - The breakdown shows under the cards, at the full width of the row.
 
 ## 8. Styles
@@ -127,3 +128,5 @@ This document tells what the user sees on the screen and what the screen does. T
 - All colors and sizes are CSS custom properties in `styles/tokens.css`. The CSS modules use only these tokens.
 - Light mode only. With the tokens, we can add a dark mode later with no change to the components.
 - The text on each day card must have a contrast of 4.5:1 or more (WCAG AA).
+  - The text is black or white: the color with the higher contrast. With pure black and pure white, each background gives 4.58:1 or more.
+  - The lighter cards (days 4–7) and the ended cards mix the card color with the page colors (`--card-low-confidence-strength`, `--card-ended-strength`). The text color is selected after the mix.

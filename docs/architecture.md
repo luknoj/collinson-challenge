@@ -85,7 +85,7 @@ apps/api/src/
 apps/web/src/
   main.tsx
   App.tsx
-  api/                      Apollo Client, queries (.graphql)
+  api/                      Apollo Client, the 4 row queries (rows.graphql), LocationInput from a place
   geocoding/
     geocoding.ts            direct calls to Geocoding /search and /get
   place/
@@ -94,19 +94,24 @@ apps/web/src/
   components/
     SearchBox/              Base UI Combobox, useTownSearch (300 ms delay, cancel)
     PlaceHeader/
+    ActivityRows/           the 4 rows, useRowQueries (placeholders until all 4 settle)
+    Row/                    the frame of a row, the placeholder, "Data not available"
     ActivityRow/            header, day cards, summary or breakdown
-    DayCard/
-    DayBreakdown/
+    DayCard/                1 day, cardColors (gradient, text color with the higher contrast)
+    DayBreakdown/           factors (Base UI Meter), adjustments, gates
     WeeklySummary/
-    IndoorRow/
-    Explanation/            text with a popover
+    IndoorRow/              level cards, IndoorDayBreakdown
+    Explanation/            ExplanationList; phase 6 adds the text with a popover
     HowScoresWork/          side panel (Base UI Drawer)
   text/
+    simpleText.ts           simple text for phase 5 (phase 6 replaces it)
     templates.ts            1 text template for each ExplanationKey
   url/
     placeUrl.ts             read and write ?place= and &name=
   utils/
-    time.ts                 formatLocalTime (the time in the time zone of the town)
+    time.ts                 formatLocalTime, day names and dates of the town
+    color.ts                sRGB mix and the WCAG contrast ratio
+    number.ts               formatNumber (1 decimal or less; the API does not round the values)
   styles/
     tokens.css              all colors and sizes
     global.css              base styles for the page (uses the tokens)
