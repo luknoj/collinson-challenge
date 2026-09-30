@@ -6,6 +6,8 @@
   --color-text: #1b1f24;
   --color-text-muted: #5b6470;
   --color-accent: #1f5fbf;
+  --color-highlight: #eaf0fa;
+  --color-danger: #b3261e;
 
   /* Score gradient, from 0 (Poor) to 100 (Excellent) */
   --score-0: #c62828;
@@ -39,5 +41,7 @@
   /* Shape and layout */
   --radius-sm: 6px;
   --radius-md: 12px;
+  --shadow-popup: 0 4px 16px rgb(27 31 36 / 12%);
+  --focus-ring: 0 0 0 3px rgb(31 95 191 / 30%);
   --layout-max-width: 1120px;
 }
