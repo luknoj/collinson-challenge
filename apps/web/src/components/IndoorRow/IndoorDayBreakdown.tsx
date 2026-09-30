@@ -2,8 +2,9 @@ import type {
   DayScoreFieldsFragment,
   IndoorRowQuery,
 } from '../../generated/graphql';
-import { explanationText, LABELS, LEVELS } from '../../text/simpleText';
+import { LABELS, LEVELS } from '../../text/labels';
 import { formatDate } from '../../utils/time';
+import { Explanation } from '../Explanation/Explanation';
 import { ExplanationList } from '../Explanation/ExplanationList';
 import styles from './IndoorRow.module.css';
 
@@ -47,7 +48,7 @@ export function IndoorDayBreakdown({
       </p>
       {day.mainCause && (
         <p className={styles.line}>
-          Main cause: {explanationText(day.mainCause)}
+          Main cause: <Explanation explanation={day.mainCause} />
         </p>
       )}
       {day.hints.length > 0 && (

@@ -155,13 +155,18 @@ function scoreOutdoorDay({
         (w.minApparent !== null &&
           w.minApparent < gates.extremeTemperature.belowC),
       maxScore: gates.extremeTemperature.maxScore,
-      params: { maxApparent: w.maxApparent, minApparent: w.minApparent },
+      params: {
+        maxApparent: w.maxApparent,
+        minApparent: w.minApparent,
+        aboveC: gates.extremeTemperature.aboveC,
+        belowC: gates.extremeTemperature.belowC,
+      },
     },
     {
       key: 'STRONG_GUSTS_GATE',
       active: w.maxGusts !== null && w.maxGusts > gates.strongGusts.aboveKmh,
       maxScore: gates.strongGusts.maxScore,
-      params: { gustsKmh: w.maxGusts },
+      params: { gustsKmh: w.maxGusts, aboveKmh: gates.strongGusts.aboveKmh },
     },
     {
       key: 'HEAVY_RAIN_GATE',
@@ -171,13 +176,18 @@ function scoreOutdoorDay({
         w.precipitationMm > gates.heavyRain.aboveMm &&
         w.maxProbability > gates.heavyRain.aboveProbability,
       maxScore: gates.heavyRain.maxScore,
-      params: { amountMm: w.precipitationMm, probability: w.maxProbability },
+      params: {
+        amountMm: w.precipitationMm,
+        probability: w.maxProbability,
+        aboveMm: gates.heavyRain.aboveMm,
+        aboveProbability: gates.heavyRain.aboveProbability,
+      },
     },
     {
       key: 'HIGH_WIND_GATE',
       active: windMax !== null && windMax > gates.highWind.aboveKmh,
       maxScore: gates.highWind.maxScore,
-      params: { windKmh: windMax },
+      params: { windKmh: windMax, aboveKmh: gates.highWind.aboveKmh },
     },
   ];
 
@@ -187,13 +197,16 @@ function scoreOutdoorDay({
     adjustments.push({
       key: 'FOG',
       points: config.fog.points,
-      params: { hours: fogHours },
+      params: { hours: fogHours, minHours: config.fog.minHours },
     });
   }
 
   const notes: Explanation[] = [];
   if (uv !== null && uv >= config.uv.veryHighIndex) {
-    notes.push({ key: 'UV_VERY_HIGH', params: { uvIndex: uv } });
+    notes.push({
+      key: 'UV_VERY_HIGH',
+      params: { uvIndex: uv, minIndex: config.uv.veryHighIndex },
+    });
   }
 
   return buildDayScore({

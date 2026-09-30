@@ -202,7 +202,7 @@ describe('scoreOutdoor', () => {
       expect(today({ options: fog(2) }).adjustments).toEqual([]);
       const day = today({ options: fog(3) });
       expect(day.adjustments).toEqual([
-        { key: 'FOG', points: -5, params: { hours: 3 } },
+        { key: 'FOG', points: -5, params: { hours: 3, minHours: 3 } },
       ]);
       expect(day.score).toBe(95);
     });
@@ -212,7 +212,7 @@ describe('scoreOutdoor', () => {
       expect(today({ options: uv(8.9) }).notes).toEqual([]);
       const day = today({ options: uv(9) });
       expect(day.notes).toEqual([
-        { key: 'UV_VERY_HIGH', params: { uvIndex: 9 } },
+        { key: 'UV_VERY_HIGH', params: { uvIndex: 9, minIndex: 9 } },
       ]);
       expect(day.score).toBe(100);
     });

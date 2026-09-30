@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { TERMS } from '../../text/templates';
+import { InfoPopover } from '../Explanation/InfoPopover';
 import type { CardColors } from './cardColors';
 import styles from './DayCard.module.css';
 
@@ -15,7 +17,11 @@ interface DayCardProps {
   caption: string;
 }
 
-/** 1 day. A click shows the breakdown of the day (ui-spec.md, section 4). */
+/**
+ * 1 day. A click shows the breakdown of the day (ui-spec.md, section 4).
+ * The select button covers the full card. The "Ended" pill is a separate
+ * button with a popover, above the select button.
+ */
 export function DayCard({
   dayName,
   colors,
@@ -26,17 +32,30 @@ export function DayCard({
   caption,
 }: DayCardProps) {
   return (
-    <li className={styles.item}>
+    <li
+      className={styles.card}
+      style={{ background: colors.background, color: colors.color }}
+      data-selected={selected || undefined}
+    >
+      <span className={styles.top}>
+        <span className={styles.day} aria-hidden="true">
+          {dayName}
+        </span>
+        {ended && (
+          <span className={styles.ended}>
+            <InfoPopover {...TERMS.ENDED} label="Ended" />
+          </span>
+        )}
+      </span>
       <button
         type="button"
-        className={styles.card}
-        style={{ background: colors.background, color: colors.color }}
+        className={styles.select}
         aria-pressed={selected}
         onClick={onSelect}
       >
-        <span className={styles.top}>
-          <span className={styles.day}>{dayName}</span>
-          {ended && <span className={styles.ended}>Ended</span>}
+        <span className={styles.visuallyHidden}>
+          {dayName}
+          {ended ? ', ended' : ''}:{' '}
         </span>
         <span className={styles.main}>{main}</span>
         <span className={styles.caption}>{caption}</span>

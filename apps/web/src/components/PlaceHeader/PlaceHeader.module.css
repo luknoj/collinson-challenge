@@ -21,3 +21,10 @@
   margin: 0;
   color: var(--color-text-muted);
 }
+
+.side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}

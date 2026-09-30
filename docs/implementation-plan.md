@@ -21,7 +21,7 @@ This document tells the order of the work. It divides the work into phases. Each
 | 3 | GraphQL API | 1, 2 | Done |
 | 4 | Search, header and URL | 0 | Done |
 | 5 | Activity rows | 3, 4 | Done |
-| 6 | Explanations | 5 | Not started |
+| 6 | Explanations | 5 | Done |
 | 7 | Final checks | 6 | Not started |
 
 Phases 2 and 4 do not need the scoring functions. Thus, you can do them before phase 1 or at the same time.

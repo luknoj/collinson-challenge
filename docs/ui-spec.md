@@ -104,16 +104,21 @@ This document tells what the user sees on the screen and what the screen does. T
 ## 6. Explanations
 
 - **Popovers:** Words that need a longer explanation have a popover (Base UI `Popover`). Examples: "Rain on snow", "Ended", "Onshore".
+  - A word with a popover has a dotted underline. A click opens the popover. Escape closes it, and the focus goes back to the word.
+  - The "Ended" pill on a day card is a separate button above the card. Thus, a click on the pill opens the popover, and a click on the other parts of the card selects the day.
 - **"How the scores work" panel:** A button in the header opens a side panel (Base UI `Drawer`). The panel has these sections:
   - Labels and colors
   - Weekly score
   - Confidence
   - Ended days
+  - Gates and adjustments
   - Local time
   - Indoor sightseeing
   - Data source and limits
+
+  The numbers in the panel (for example, the label ranges) come from [scoring.md](scoring.md). They are not in the API.
 - Each popover can have a "More" link. The link opens the panel at the correct section.
-- **Text templates:** `text/templates.ts` has 1 template for each `ExplanationKey`. The template gets the `params` from the backend. Thus, the numbers in the text always come from the config. Example:
+- **Text templates:** `text/templates.ts` has 1 template for each `ExplanationKey`. The template gets the `params` from the backend. Thus, the numbers in the text always come from the config. The gates send their limits in `params` (for example, `aboveKmh`). A term in `[brackets]` in a template becomes a word with a popover. Example:
   > "Rain on snow makes the slopes wet and heavy. When the rain is more than {rainMm} mm and the temperature is more than {tempC} °C, the maximum score is {maxScore}."
 
 ## 7. Phone layout
