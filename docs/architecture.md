@@ -56,16 +56,22 @@ apps/api/src/
     elevation.ts            1 request with 81 points (7×7 grid + ring)
     dataLayer.ts            joined calls, cache, retries, time limit
   scoring/
+    index.ts                the public functions of the scoring module
+    types.ts                result types (same shape as the schema), ExplanationKey list
+    weather.ts              the normalized weather model (input)
     shared/
-      config.ts             labels, weekly score, confidence, windows
+      config.ts             labels, weekly score, confidence, windows, weather codes
       curve.ts              piecewise-linear curve
-      week.ts               weekly score, ended days
+      time.ts               dates, local time, hour windows, statistics, directions
+      day.ts                factors + adjustments + gates → 1 day result
+      week.ts               labels, confidence, weekly score, ended days
       summary.ts            weekly summary rules
       validate.ts           config checks at startup
-    skiing/                 config.ts, score.ts, score.test.ts
-    surfing/                config.ts, score.ts, score.test.ts
+    skiing/                 config.ts, score.ts, mountain.ts, score.test.ts
+    surfing/                config.ts, score.ts, coast.ts, score.test.ts
     outdoor/                config.ts, score.ts, score.test.ts
     indoor/                 config.ts, recommend.ts, recommend.test.ts
+    testing/                test data builders (forecast, marine, terrain)
   generated/                resolver types (made by codegen, not in git)
 
 apps/web/src/
@@ -175,13 +181,16 @@ If a value is not correct, the backend returns `BAD_USER_INPUT`. The risk of inc
 ### 4.4 Scoring
 
 - The scoring functions are pure functions. They get the weather data and the config. They return the result for the schema.
+- **Input:** the normalized weather model in `scoring/weather.ts`. The Open-Meteo clients make it. All times are local times of the town. The model includes the 3 days from `past_days`.
+- **Hourly values:** Open-Meteo gives instant values (for example, temperature) for the time stamp. It gives amounts and maximums (precipitation, rain, snowfall, precipitation probability, gusts) for the hour before the time stamp. Thus, the window 09:00–18:00 uses the stamps 09:00–17:00 for instant values and 10:00–18:00 for amounts.
+- **Terrain:** The skiing and surfing functions get the Elevation data as a `Terrain` object, or `null` when the Elevation API failed. With `null`, the result has a `TERRAIN_UNAVAILABLE` note.
 - Each activity has its own config file. `shared/config.ts` contains the values that all activities use.
 - At startup, `validate.ts` checks all configs:
   - The weights of each activity add up to 1.
   - The x values of each curve increase.
   - All sub-scores are from 0 to 1.
 
-  If a check fails, the server does not start and shows the error.
+  If a check fails, the server does not start and shows the error. `createServer()` runs this check.
 - The indoor resolver calls the outdoor score function. The calculation is fast, and the weather data comes from the cache.
 - The optional indoor value (refer to [scoring.md](scoring.md), section 6) is not in the API.
 
@@ -202,7 +211,7 @@ The backend makes the summary with rules. It returns structured items (key, `par
 | Item | Rule |
 |---|---|
 | Best days | The 1–2 days with the highest score. Only days with a score of 40 or more. No ended days. |
-| Trend | Compare the mean of days 1–3 with the mean of days 5–7. Give the factor with the largest change. |
+| Trend | Compare the mean of days 1–3 with the mean of days 5–7. Show the trend only when the change is 10 points or more (a temporary value, refer to [future-improvements.md](future-improvements.md), item 1.2). Give the factor with the largest change in the same direction. |
 | Warnings | All gates with an effect during the week, with their days. |
 | Confidence | A note when the best days have Medium or Low confidence. |
 | Notes | The mountain note, the coast direction note, and the note for missing terrain data. |
@@ -258,12 +267,14 @@ type DayScore {
   gates: [Explanation!]!               # only the gates with an effect
   adjustments: [Adjustment!]!
   reasons: [Explanation!]!             # the 1–2 worst factors
+  notes: [Explanation!]!               # notes for this day only (UV, wind direction, mountain conditions)
 }
 
 type Factor {
   key: ExplanationKey!
   value: Float
   unit: String                         # "m", "cm", "°C", "km/h", "%"
+  params: JSON                         # for factors with 2 inputs (skiing sky, outdoor precipitation)
   subScore: Float!                     # 0–1
   weight: Float!                       # 0–1
   points: Float!                       # weight × subScore × 100
@@ -306,7 +317,8 @@ enum ExplanationKey {
   ONSHORE_WIND
   NO_SEA_NEARBY
   MOUNTAIN_NOTE
-  # … 1 key for each factor, gate, adjustment, note, hint and summary item
+  # … 1 key for each factor, gate, adjustment, note, hint and summary item.
+  # The full list is EXPLANATION_KEYS in apps/api/src/scoring/types.ts.
 }
 
 scalar JSON

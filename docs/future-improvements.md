@@ -30,6 +30,18 @@ This document lists known problems in the plan and ideas for later versions.
 | Missing data | No rule | What to do when a value or an hour is `null`. For example: ignore the missing hours if 50% or more of the window has data. If not, the factor gets no score and a note. |
 | Rounding | "Scores are integers" | When to round. For example: calculate with decimals, and round only the final score, the weekly score and the points that the UI shows. |
 
+**Temporary values in the code (phase 1):** The code needs a value for each item. Until this item is complete, the config files use these temporary values. Each value has a comment in its config file.
+
+| Item | Temporary value | File |
+|---|---|---|
+| Large swell gate | The maximum swell height from sunrise to sunset is more than 4 m: maximum score 20. | `surfing/config.ts` |
+| Fog | Fog codes in 3 or more hours of the window: −5 points. | `outdoor/config.ts` |
+| Coast direction test | The length of the mean vector of the sea directions is 0.5 or more. | `surfing/config.ts` |
+| Missing data | A factor with no data in the window is not used. The weights of the other factors are scaled so that their sum is 1. A `DATA_MISSING` note tells the user. Hours with `null` are ignored. | `shared/day.ts` |
+| Rounding | The calculation uses decimals. Only the day score, the score before the gates and the weekly score are rounded. | `shared/day.ts`, `shared/week.ts` |
+| Trend in the weekly summary | Shown only when the change is 10 points or more. | `shared/config.ts` |
+| No sunrise or sunset (polar night or polar day) | The surfing window is 09:00–18:00. | `surfing/score.ts` |
+
 ## 2. Backend (architecture.md)
 
 ### 2.1 Retries and timeout

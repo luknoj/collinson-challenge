@@ -35,6 +35,7 @@ Do these steps for each activity and each day:
 Rules:
 
 - **Daytime hours:** Use only the data for daytime hours. Sightseeing: 09:00 to 18:00. Skiing: 09:00 to 16:00. Surfing: sunrise to sunset. Rain at 03:00 has no effect on the score.
+- **Hourly time stamps:** Instant values (for example, temperature) are for the time stamp. Amounts and maximums (precipitation, rain, snowfall, precipitation probability, gusts) are for the hour before the time stamp. Thus, the window 09:00–18:00 uses the stamps 09:00–17:00 for instant values and 10:00–18:00 for amounts.
 - **Labels:** 0–19 Poor · 20–39 Fair · 40–59 Moderate · 60–79 Good · 80–100 Excellent.
 - **Weather codes (WMO):**
   - 45 and 48: fog
