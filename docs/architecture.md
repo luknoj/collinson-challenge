@@ -51,10 +51,15 @@ apps/api/src/
   resolvers/                Query, activity fields
     validateLocation.ts     input checks (BAD_USER_INPUT)
   openMeteo/
-    forecast.ts
-    marine.ts
-    elevation.ts            1 request with 81 points (7×7 grid + ring)
+    config.ts               URLs, TTLs, retries, time limit, grid and ring sizes
     dataLayer.ts            joined calls, cache, retries, time limit
+    errors.ts               OpenMeteoError (the API and the reason)
+    response.ts             GET request, response shape checks
+    location.ts             coordinates types
+    forecast.ts
+    marine.ts               null when all values are null (far from the sea)
+    elevation.ts            1 request with 81 points (7×7 grid + ring)
+    testing/                mocked Open-Meteo (msw) for the tests
   scoring/
     index.ts                the public functions of the scoring module
     types.ts                result types (same shape as the schema)
@@ -151,6 +156,9 @@ All calls to Open-Meteo go through the data layer. It has these functions:
   | Elevation | 30 days |
 
 - **Retries:** The data layer tries each failed call again 2 times, after 300 ms and after 900 ms. Each call has a timeout of 8 s.
+  - A retry occurs only after a time-out, a network failure, HTTP 5xx or HTTP 429.
+  - There is no retry after other HTTP 4xx statuses or a response with an incorrect shape, because the result does not change.
+- **Errors:** A failed call gives an `OpenMeteoError`. It has the API (`forecast`, `marine`, `elevation`), the reason (`TIMEOUT`, `NETWORK`, `HTTP`, `INVALID_RESPONSE`) and the HTTP status. For Forecast and Marine, the resolvers change it to `UPSTREAM_UNAVAILABLE`. For Elevation, they add a note (refer to section 4.2).
 - **Time limit for each resolver:** 10 s. After 10 s, the resolver stops and returns an error.
 - **No cache for failures:** When a call fails, the data layer removes the promise from the map. It does not keep the error. Thus, "Try again" sends a new call.
 
