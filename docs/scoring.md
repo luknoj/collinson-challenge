@@ -12,8 +12,10 @@ This document gives the method to calculate scores for **skiing**, **surfing** a
 |---|---|
 | Geocoding | Find the coordinates, elevation, time zone and population of a city. |
 | Elevation | Send 1 request with 81 points. The 7×7 grid (49 points) finds mountain towns (skiing). The ring (32 points) finds the coast direction (surfing). |
-| Forecast | Get the weather data for all activities. Use `forecast_days=7`, `timezone=auto` and the elevation from Geocoding. |
+| Forecast | Get the weather data for all activities. Use `forecast_days=7`, `past_days=2`, `timezone=auto` and the elevation from Geocoding. |
 | Marine | Get the wave data and the sea temperature (surfing). |
+
+`past_days=2` adds the 2 days before today to the response (9 days in total). Use these 2 days only for the fresh snow factor and the snow depth check. Do not show scores for these 2 days.
 
 Units: `snowfall` is in cm. `snow_depth` is in m. Wind speed is in km/h.
 
@@ -49,13 +51,26 @@ Rules:
 
 | Factor | Input | Curve (value → score) | Weight |
 |---|---|---|---|
-| Snow base | `snow_depth` (m) | 0.3 → 0.3 · 1.0 → 1 | 30% |
-| Fresh snow | `snowfall_sum` for the last 72 h (cm) | 0 → 0.5 · 5 → 1 · 25 → 1 · 40 → 0.3 | 20% |
+| Snow base | `snow_depth` at 09:00, the start of the lift hours (m) | 0.3 → 0.3 · 1.0 → 1 | 30% |
+| Fresh snow | Hourly `snowfall` in the 72 h before 09:00 of that day (cm) | 0 → 0.5 · 5 → 1 · 25 → 1 · 40 → 0.3 | 20% |
 | Temperature | `apparent_temperature`, mean during the lift hours (°C) | −22 → 0 · −7 → 1 · +2 → 1 · +7 → 0 | 15% |
 | Wind | `wind_gusts_10m_max` (km/h) | 30 → 1 · 60 → 0 | 20% |
 | Sky | 0.6 × visibility + 0.4 × sunshine | visibility: 1 km → 0 · 5 km → 1; sunshine ratio: 0 → 0 · 0.6 → 1 | 15% |
 
-**Snow depth check:** The snow depth cannot increase more than the snowfall: `depth[d] ≤ depth[d−1] + snowfall[d]`. This rule removes sudden jumps in the forecast data.
+**Fresh snow:** This factor measures the fresh snow that is on the slopes when the lifts open at 09:00. Snow that falls after 09:00 counts for the next day. Snowfall during the lift hours decreases the visibility. The sky factor shows this effect.
+
+**Hourly snowfall values:** Each hourly `snowfall` value is the snowfall in the hour before its time stamp. Thus, the period "from 09:00 on day A to 09:00 on day B" contains the values from 10:00 on day A to 09:00 on day B.
+
+**Snow depth check:** The snow depth at 09:00 cannot increase more than the snowfall since 09:00 on the day before:
+
+```
+depth[d] ≤ depth[d−1] + snowfall(09:00 on day d−1 → 09:00 on day d) / 100
+```
+
+- `depth` is `snow_depth` at 09:00, in m.
+- `snowfall` is the sum of the hourly values, in cm. Divide by 100 to get m.
+- If the forecast depth is more than this limit, use the limit.
+- This rule removes sudden jumps in the forecast data. For day 1, use the snow depth at 09:00 on day −1 from `past_days`.
 
 **Mountain town note:** The score uses the forecast for the town. The note does not change the score.
 
@@ -173,6 +188,7 @@ All decisions are complete. There are no open items.
 - Open-Meteo is the only data source.
 - 1 configuration file contains all the limits and weights. The worked examples are the unit tests.
 - The skiing score uses the forecast for the town. Mountain towns also get a note about the high terrain.
+- The snow depth for a day is the value at 09:00. The fresh snow factor uses the snowfall in the 72 h before 09:00. The request includes `past_days=2`, so this data is available for all 7 days.
 - If the Marine API gives only null values, surfing is "Not applicable".
 - The terrain gives the coast direction. The wind direction adjustment is a maximum of −10 or +5 points. It always has a note.
 - Indoor sightseeing is a recommendation. It has hints for travel, crowds and town size.

@@ -21,7 +21,7 @@ A sunny and cold day after fresh snow.
 | Data | Value |
 |---|---|
 | Snow depth | 1.2 m |
-| Snowfall, last 72 h | 18 cm (0 cm today) |
+| Snowfall, 72 h before 09:00 | 18 cm (no snow during the day) |
 | Temperature, daytime mean | −6 °C |
 | "Feels like", daytime mean | −9 °C |
 | Maximum wind / maximum gusts | 20 km/h / 35 km/h |
@@ -216,7 +216,7 @@ A day with warm rain on thin snow.
 | Data | Value |
 |---|---|
 | Snow depth | 0.6 m |
-| Snowfall, last 72 h | 0 cm |
+| Snowfall, 72 h before 09:00 | 0 cm |
 | Temperature, daytime mean | +4 °C |
 | "Feels like", daytime mean | +1 °C |
 | Maximum wind / maximum gusts | 30 km/h / 45 km/h |

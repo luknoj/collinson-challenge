@@ -49,7 +49,8 @@ Tourism research has 2 standard weather indices for city tourism. Our weights ar
   - Warsaw: +11 m (flat)
 - **Temperature and height:** The standard atmosphere decreases by 0.65 °C for each 100 m. In winter, cold air can stay in valleys. Then the slopes can be warmer than the town.
 - **Snow altitude:** Snow usually falls to approximately 300 m below the freezing level. In heavy precipitation, snow falls lower. This is a general rule from weather forecasters.
-- **The snow depth can increase without snowfall.** At Zermatt, the snow depth changed from 0 m to 0.45 m on 5–6 October with 0 cm of snowfall. Possibly, the API changed to a less detailed model for the later days. This is our interpretation. The documentation does not give this information. For this reason, we use the check `depth[d] ≤ depth[d−1] + snowfall[d]`.
+- **The `past_days` parameter works.** With `past_days=2`, the API gave 9 days of data (28 September to 6 October). Without this parameter, the fresh snow factor on day 1 does not see the snow of the 2 days before. In the Zermatt example, the score then decreases from 95 to 85.
+- **The snow depth can increase without snowfall.** At Zermatt, the snow depth changed from 0 m to 0.45 m on 5–6 October with 0 cm of snowfall. Possibly, the API changed to a less detailed model for the later days. This is our interpretation. The documentation does not give this information. For this reason, we use a check: the snow depth at 09:00 cannot increase more than the snowfall since 09:00 on the day before.
 
 ## Surfing
 
