@@ -26,19 +26,28 @@ This document tells how the app is built: the technology, the repository structu
 
 The app runs only on a local computer. There is no deployment and no Docker setup.
 
+**Versions:** Some latest versions do not work together. Thus, the workspace uses these versions:
+
+- `graphql` 16, because Apollo Server 5 needs `graphql` 16.
+- TypeScript 6.0, because `typescript-eslint` supports only versions lower than 6.1.
+- pnpm blocks packages that are less than 1 day old. Do not add exceptions for new versions. Use an older version.
+
 ## 2. Repository structure
 
 ```
 .nvmrc                      Node.js 24 (LTS)
 package.json                root scripts, "packageManager" field for pnpm
-pnpm-workspace.yaml         apps/*
+pnpm-workspace.yaml         apps/*, allowed install scripts
+tsconfig.base.json          strict settings, each app extends it
 codegen.ts                  GraphQL Code Generator config for the 2 apps
 eslint.config.js
-.prettierrc
+.prettierrc                 .prettierignore excludes the Markdown docs
 
 apps/api/src/
-  index.ts                  Apollo Server start
+  index.ts                  Apollo Server start (startStandaloneServer)
+  server.ts                 createServer(), also used by the tests
   schema.graphql            the contract between the 2 apps
+  schema.ts                 reads schema.graphql
   resolvers/                Query, activity fields
     validateLocation.ts     input checks (BAD_USER_INPUT)
   openMeteo/
@@ -57,7 +66,7 @@ apps/api/src/
     surfing/                config.ts, score.ts, score.test.ts
     outdoor/                config.ts, score.ts, score.test.ts
     indoor/                 config.ts, recommend.ts, recommend.test.ts
-  generated/                resolver types (do not edit)
+  generated/                resolver types (made by codegen, not in git)
 
 apps/web/src/
   main.tsx
@@ -65,7 +74,7 @@ apps/web/src/
   api/                      Apollo Client, queries (.graphql)
   geocoding/
     geocoding.ts            direct calls to Geocoding /search and /get
-  generated/                typed documents (do not edit)
+  generated/                typed documents (made by codegen, not in git)
   components/
     SearchBox/              Base UI Combobox
     PlaceHeader/
@@ -82,6 +91,7 @@ apps/web/src/
     placeUrl.ts             read and write ?place= and &name=
   styles/
     tokens.css              all colors and sizes
+    global.css              base styles for the page (uses the tokens)
 
 docs/                       scoring, architecture and UI docs
 ```
@@ -324,10 +334,14 @@ No test calls the real Open-Meteo. There are no frontend tests and no end-to-end
 | Command | Result |
 |---|---|
 | `pnpm install` | Installs the dependencies of the 2 apps. |
-| `pnpm dev` | Starts the API (port 4000) and Vite (port 5173). Vite sends `/graphql` to port 4000. |
-| `pnpm codegen` | Makes the types from `schema.graphql` for the 2 apps. |
-| `pnpm test` | Runs the tests. |
+| `pnpm dev` | Runs `pnpm codegen`, then starts the API (port 4000) and Vite (port 5173). Vite sends `/graphql` to port 4000. |
+| `pnpm codegen` | Makes the types from `schema.graphql` and the `.graphql` documents for the 2 apps. |
+| `pnpm test` | Runs `pnpm codegen`, then the tests. |
+| `pnpm typecheck` | Runs `pnpm codegen`, then TypeScript checks in the 2 apps. |
 | `pnpm lint` | Runs ESLint and Prettier checks. |
+| `pnpm format` | Formats the code with Prettier. |
+
+The generated files are not in git. Thus, run `pnpm codegen` (or a command that runs it) after `pnpm install`.
 
 ## 8. Decisions
 

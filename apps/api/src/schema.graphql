@@ -1,0 +1,4 @@
+type Query {
+  "Temporary query for the workspace setup. Phase 3 removes it."
+  health: String!
+}

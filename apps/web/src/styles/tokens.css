@@ -1,0 +1,43 @@
+:root {
+  /* Surfaces and text */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-border: #d9dde3;
+  --color-text: #1b1f24;
+  --color-text-muted: #5b6470;
+  --color-accent: #1f5fbf;
+
+  /* Score gradient, from 0 (Poor) to 100 (Excellent) */
+  --score-0: #c62828;
+  --score-25: #ef6c00;
+  --score-50: #f9a825;
+  --score-75: #7cb342;
+  --score-100: #2e7d32;
+
+  /* Indoor recommendation levels */
+  --indoor-recommended: #1e3a8a;
+  --indoor-good-alternative: #3b6fd8;
+  --indoor-save-for-later: #c9d3e3;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Type */
+  --font-family:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-2xl: 1.75rem;
+
+  /* Shape and layout */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --layout-max-width: 1120px;
+}
