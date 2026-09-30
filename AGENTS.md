@@ -1,10 +1,6 @@
 Always talk in ASD-STE100 Simplified Technical English.
 
 ## Git workflow
-
-- Do not commit or push changes unless the user asks.
-- Never push directly to `main`.
-- When the user asks for a push, do these steps:
   1. Make a new branch from the latest `main`. Examples: `docs/<topic>`, `phase-<n>-<name>`.
   2. Commit with a Conventional Commits message. Example: `feat(docs): add implementation plan`. Put a short list of the changes in the commit body.
   3. Push the branch with `git push -u origin <branch>`.

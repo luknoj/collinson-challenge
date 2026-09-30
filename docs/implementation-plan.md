@@ -15,7 +15,7 @@ This document tells the order of the work. It divides the work into phases. Each
 
 | Phase | Name | Depends on | Status |
 |---|---|---|---|
-| 0 | Workspace setup | – | Not started |
+| 0 | Workspace setup | – | Done |
 | 1 | Scoring functions | 0 | Not started |
 | 2 | Open-Meteo clients and data layer | 0 | Not started |
 | 3 | GraphQL API | 1, 2 | Not started |
