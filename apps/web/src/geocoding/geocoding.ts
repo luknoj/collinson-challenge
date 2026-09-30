@@ -173,8 +173,7 @@ function invalid(message: string): GeocodingError {
 
 /** "Paris, Île-de-France Region, France". Parts that are missing or the same as the name are not shown. */
 export function placeLabel(place: Place): string {
-  const parts = [place.name, place.admin1, place.country].filter(
-    (part): part is string => part !== null,
-  );
-  return parts.filter((part, i) => parts.indexOf(part) === i).join(', ');
+  return [place.name, place.admin1, place.country]
+    .filter((part, i, parts) => part !== null && parts.indexOf(part) === i)
+    .join(', ');
 }

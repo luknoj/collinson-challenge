@@ -36,9 +36,12 @@ This document tells what the user sees on the screen and what the screen does. T
 
 - The search uses the Base UI `Combobox`.
 - The frontend calls Geocoding `/search` directly when the text has 2 characters or more, after a delay of 300 ms. The request uses `count=10` and `language=en`.
-- A new request cancels the request before it (`AbortController`). Thus, an old response cannot replace a new response.
+- Each text change cancels the delay and the open request (`AbortController`). The app ignores the response of a cancelled request. Thus, an old response cannot replace a new response.
+- When the text has less than 2 characters, the list has no suggestions and shows "Type 2 or more letters."
 - Each suggestion shows the name, the region and the country.
 - If there is no match, the list shows "No town found."
+- If the search fails, the list shows "The search is not available. Try again."
+- Geocoding does not send empty fields. A missing `population`, `elevation`, `admin1`, `country`, `timezone` or `feature_code` becomes `null`.
 - When the user selects a suggestion, the app sets the URL, shows the header and sends the 4 row queries.
 
 ## 3. URL
