@@ -105,6 +105,8 @@ apps/web/src/
     templates.ts            1 text template for each ExplanationKey
   url/
     placeUrl.ts             read and write ?place= and &name=
+  utils/
+    time.ts                 formatLocalTime (the time in the time zone of the town)
   styles/
     tokens.css              all colors and sizes
     global.css              base styles for the page (uses the tokens)
@@ -212,7 +214,7 @@ If a value is not correct, the backend returns `BAD_USER_INPUT`. The risk of inc
 ### 4.5 Days and local time
 
 - The Forecast request uses `timezone=auto`. All days and hours are in the local time of the town.
-- The local time in the header comes from the frontend. It uses `Intl.DateTimeFormat` with the time zone from Geocoding.
+- The local time in the header comes from the frontend. It uses `Intl.DateTimeFormat` with the time zone from Geocoding. It is the time when the town shows. It does not update.
 - The 7 days are today to today + 6, in the town.
 - **Ended days:** When the activity window of today has ended in the town, the day is "Ended". The backend uses the current UTC time and `utc_offset_seconds` from the Forecast API. The time of the user's computer has no effect.
   - Outdoor and indoor: after 18:00. Skiing: after 16:00. Surfing: after sunset.
