@@ -12,10 +12,12 @@ This document gives the method to calculate scores for **skiing**, **surfing** a
 |---|---|
 | Geocoding | Find the coordinates, elevation, time zone and population of a city. |
 | Elevation | Send 1 request with 81 points. The 7×7 grid (49 points) finds mountain towns (skiing). The ring (32 points) finds the coast direction (surfing). |
-| Forecast | Get the weather data for all activities. Use `forecast_days=7`, `past_days=2`, `timezone=auto` and the elevation from Geocoding. |
+| Forecast | Get the weather data for all activities. Use `forecast_days=7`, `past_days=3`, `timezone=auto` and the elevation from Geocoding. |
 | Marine | Get the wave data and the sea temperature (surfing). |
 
-`past_days=2` adds the 2 days before today to the response (9 days in total). Use these 2 days only for the fresh snow factor and the snow depth check. Do not show scores for these 2 days.
+`past_days=3` adds the 3 days before today to the response (10 days in total). Use these 3 days only for the fresh snow factor and the snow depth check. Do not show scores for these 3 days.
+
+The fresh snow window for day 1 starts at 09:00 on day −3. It contains the hourly values from 10:00 on day −3 to 09:00 on day 1. `past_days=2` gives data only from 00:00 on day −2 (57 h). Thus, `past_days=3` is necessary.
 
 Units: `snowfall` is in cm. `snow_depth` is in m. Wind speed is in km/h.
 
@@ -39,7 +41,7 @@ Rules:
   - 61–67: rain (66–67: freezing rain)
   - 71–77: snow
   - 95–99: thunderstorm
-- **Configuration:** Keep all weights, curves, gates and limits in 1 configuration file. Use the worked examples as unit tests.
+- **Configuration:** Keep all weights, curves, gates and limits in configuration files. Use 1 file for each activity and 1 file for the shared values. Refer to [architecture.md](architecture.md).
 
 ## 3. Skiing
 
@@ -160,7 +162,7 @@ Weather does not change a museum. But when the user stays inside on a good day, 
   - gusts of more than 75 km/h
   - a "feels like" temperature of more than 38 °C or less than −15 °C
 - **Busy:** *"Popular indoor places can have more people than usual."* Show this hint if the rain probability is 60% or more and the rain is 1 mm or more. This is only a hint, because the measured effect is small (approximately +2.8% visitors).
-- **Town size:** Show this hint only when the level is "Recommended" or "Good alternative". Use `population` and `feature_code` from Geocoding:
+- **Town size:** Show this hint 1 time for the week, in the indoor row. Use `population` and `feature_code` from Geocoding:
 
 | Town size | Hint |
 |---|---|
@@ -168,27 +170,16 @@ Weather does not change a museum. But when the user stays inside on a good day, 
 | 100,000 – 1,000,000 | "This city usually has a good number of indoor attractions." |
 | 10,000 – 100,000 | "This town has a small number of indoor attractions. Make sure that they are open before you make a plan for a full day." |
 | Less than 10,000 | "This is a small town. It can have very few indoor attractions. A larger town near this place can have more." |
-| No data | No hint |
+| No data | "Town size: no data." A popover tells the user that Open-Meteo has no population data for this place. |
 
 Tourist towns often have more attractions than their size shows. Thus, the hints use careful words.
 
-**Optional 0–100 value:** Use this value only if the UI must show all activities on 1 scale: `50 + 0.3 × (100 − outdoorScore)`.
+**Optional 0–100 value:** Use this value only if the UI must show all activities on 1 scale: `50 + 0.3 × (100 − outdoorScore)`. The API and the UI do not use this value now.
 
 ## 7. The week
 
 - **Daily scores:** Show the score for each day. This is the most useful result (for example, "skiing on Tuesday, museums on Thursday").
 - **Weekly score for each activity:** `0.5 × best day + 0.5 × mean of the best 3 days`. A usual mean does not show a small number of very good days.
+- **Ended days:** Day 1 is today in the town. When the activity window of today has ended in the town, the day is "Ended". Sightseeing: after 18:00. Skiing: after 16:00. Surfing: after sunset. Show the score of an ended day, but do not use it for the weekly score or for the best days. Tell the user about this rule.
 - **Indoor sightseeing:** Show a plan, not a weekly score. Example: *"Outdoor activities on Monday and Tuesday. Indoor activities on Thursday (rain)."*
 - **Confidence:** Show a confidence level for each day. Days 1–3: High. Days 4–5: Medium. Days 6–7: Low.
-
-## 8. Decisions
-
-All decisions are complete. There are no open items.
-
-- Open-Meteo is the only data source.
-- 1 configuration file contains all the limits and weights. The worked examples are the unit tests.
-- The skiing score uses the forecast for the town. Mountain towns also get a note about the high terrain.
-- The snow depth for a day is the value at 09:00. The fresh snow factor uses the snowfall in the 72 h before 09:00. The request includes `past_days=2`, so this data is available for all 7 days.
-- If the Marine API gives only null values, surfing is "Not applicable".
-- The terrain gives the coast direction. The wind direction adjustment is a maximum of −10 or +5 points. It always has a note.
-- Indoor sightseeing is a recommendation. It has hints for travel, crowds and town size.
