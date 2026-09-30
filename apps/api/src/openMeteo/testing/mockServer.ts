@@ -48,9 +48,6 @@ export function forecastBody() {
       daylight_duration: [30000],
       sunshine_duration: [7200],
       uv_index_max: [1.2],
-      rain_sum: [0],
-      wind_speed_10m_max: [18],
-      wind_gusts_10m_max: [35],
     },
   };
 }

@@ -68,15 +68,15 @@ This document tells what the user sees on the screen and what the screen does. T
 - **Breakdown:**
   ```
   Wed 4 Mar — Zakopane, Skiing 30 Fair (confidence: High)
-  Snow base     0.6 m          ██████░░░░  18.0 / 30
-  Fresh snow    0 cm           █████░░░░░  10.0 / 20
-  Temperature   +1 °C          ██████████  15.0 / 15
-  Wind          gusts 45 km/h  █████░░░░░  10.0 / 20
-  Sky           3 km, no sun   ███░░░░░░░   4.5 / 15
+  Snow base     0.6 m                          ██████░░░░  18.0 / 30
+  Fresh snow    0 cm                           █████░░░░░  10.0 / 20
+  Temperature   feels like 1 °C, 09:00–16:00   ██████████  15.0 / 15
+  Wind          gusts 45 km/h                  █████░░░░░  10.0 / 20
+  Sky           visibility 3 km, sun 0%        ███░░░░░░░   4.5 / 15
   Total before gates: 58 (57.5)
   ⚠ Rain on snow (6 mm at +4 °C): maximum 30
   ```
-  The values come from the Zakopane example in [scoring-examples.md](scoring-examples.md). The bars use the Base UI `Meter`.
+  The values come from the Zakopane example in [scoring-examples.md](scoring-examples.md). The bars use the Base UI `Meter`. The temperature shows its hours, because each activity uses its own hours (for example, skiing 09:00–16:00 and outdoor sightseeing 09:00–18:00). Thus, the 2 values for the same day can be different.
 - **Not applicable:** The row shows only the header and the reason (for example, "No sea near this town").
 - **Failure:** The row shows "Data not available" and a "Try again" button. The button calls `refetch` for that row only.
 

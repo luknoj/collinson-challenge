@@ -7,6 +7,7 @@ import {
   at,
   forecastDates,
   localNow,
+  max,
   mean,
   pick,
   round,
@@ -186,10 +187,16 @@ function scoreSkiingDay({
   const visibilityKm = visibilityM === null ? null : visibilityM / 1000;
   const codes = hourly(h.weatherCode);
 
+  // Maximum and sum in the lift hours, not for all 24 hours of the day.
+  const gustsMax = max(pick({ series: h.windGusts, indices: amount }));
+  const rainMm = sum(pick({ series: h.rain, indices: amount }));
+  const liftHours = {
+    startHour: config.window.startHour,
+    endHour: config.window.endHour,
+  };
+
   const d = forecast.daily.date.indexOf(date);
   const daily = forecast.daily;
-  const gustsMax = valueAt({ series: daily.windGustsMax, index: d });
-  const rainSum = valueAt({ series: daily.rainSum, index: d });
   const sunshineRatio = ratio({
     part: valueAt({ series: daily.sunshineDuration, index: d }),
     whole: valueAt({ series: daily.daylightDuration, index: d }),
@@ -274,6 +281,7 @@ function scoreSkiingDay({
         }),
         value: meanApparent,
         unit: '°C',
+        params: liftHours,
       },
       {
         key: 'SKI_WIND',
@@ -281,6 +289,7 @@ function scoreSkiingDay({
         subScore: evaluateOptional({ curve: curves.wind, value: gustsMax }),
         value: gustsMax,
         unit: 'km/h',
+        params: liftHours,
       },
       {
         key: 'SKI_SKY',
@@ -308,13 +317,13 @@ function scoreSkiingDay({
       {
         key: 'RAIN_ON_SNOW_GATE',
         active:
-          rainSum !== null &&
+          rainMm !== null &&
           meanTemperature !== null &&
-          rainSum > gates.rainOnSnow.aboveRainMm &&
+          rainMm > gates.rainOnSnow.aboveRainMm &&
           meanTemperature > gates.rainOnSnow.aboveTemperatureC,
         maxScore: gates.rainOnSnow.maxScore,
         params: {
-          rainMm: rainSum,
+          rainMm,
           temperatureC: meanTemperature,
           aboveRainMm: gates.rainOnSnow.aboveRainMm,
           aboveTemperatureC: gates.rainOnSnow.aboveTemperatureC,

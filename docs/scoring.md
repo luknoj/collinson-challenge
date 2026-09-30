@@ -34,7 +34,7 @@ Do these steps for each activity and each day:
 
 Rules:
 
-- **Daytime hours:** Use only the data for daytime hours. Sightseeing: 09:00 to 18:00. Skiing: 09:00 to 16:00. Surfing: sunrise to sunset. Rain at 03:00 has no effect on the score.
+- **Daytime hours:** Use only the data for daytime hours. Sightseeing: 09:00 to 18:00. Skiing: 09:00 to 16:00. Surfing: sunrise to sunset. Rain at 03:00 has no effect on the score. Thus, calculate all rain totals and wind maxima from the hourly data in these hours. Do not use the daily values for 24 h (`rain_sum`, `wind_speed_10m_max`, `wind_gusts_10m_max`).
 - **Hourly time stamps:** Instant values (for example, temperature) are for the time stamp. Amounts and maximums (precipitation, rain, snowfall, precipitation probability, gusts) are for the hour before the time stamp. Thus, the window 09:00–18:00 uses the stamps 09:00–17:00 for instant values and 10:00–18:00 for amounts.
 - **Labels:** 0–19 Poor · 20–39 Fair · 40–59 Moderate · 60–79 Good · 80–100 Excellent.
 - **Weather codes (WMO):**
@@ -50,14 +50,14 @@ Rules:
 
 - If `snow_depth` is less than 0.3 m for all the week, skiing is "Not applicable". If `snow_depth` is less than 0.3 m on 1 day, the score for that day is 0.
 - If there is freezing rain (codes 66–67) during the lift hours, the maximum score is 20.
-- If there is rain on snow (`rain_sum` more than 2 mm and temperature more than 0 °C), the maximum score is 30.
+- If there is rain on snow (hourly `rain` in the lift hours more than 2 mm in total and temperature more than 0 °C), the maximum score is 30.
 
 | Factor | Input | Curve (value → score) | Weight |
 |---|---|---|---|
 | Snow base | `snow_depth` at 09:00, the start of the lift hours (m) | 0.3 → 0.3 · 1.0 → 1 | 30% |
 | Fresh snow | Hourly `snowfall` in the 72 h before 09:00 of that day (cm) | 0 → 0.5 · 5 → 1 · 25 → 1 · 40 → 0.3 | 20% |
 | Temperature | `apparent_temperature`, mean during the lift hours (°C) | −22 → 0 · −7 → 1 · +2 → 1 · +7 → 0 | 15% |
-| Wind | `wind_gusts_10m_max` (km/h) | 30 → 1 · 60 → 0 | 20% |
+| Wind | `wind_gusts_10m`, maximum during the lift hours (km/h) | 30 → 1 · 60 → 0 | 20% |
 | Sky | 0.6 × visibility + 0.4 × sunshine | visibility: 1 km → 0 · 5 km → 1; sunshine ratio: 0 → 0 · 0.6 → 1 | 15% |
 
 **Fresh snow:** This factor measures the fresh snow that is on the slopes when the lifts open at 09:00. Snow that falls after 09:00 counts for the next day. Snowfall during the lift hours decreases the visibility. The sky factor shows this effect.
@@ -130,14 +130,14 @@ Add this text to each note: *"The coast direction is an estimate. Each beach can
 - If the "feels like" temperature is more than 38 °C or less than −15 °C, the maximum score is 20.
 - If the gusts are more than 75 km/h, the maximum score is 20.
 - If the rain is more than 5 mm and the probability is more than 70%, the maximum score is 25.
-- If `wind_speed_10m_max` is more than 40 km/h, the maximum score is 40.
+- If the daytime maximum of `wind_speed_10m` is more than 40 km/h, the maximum score is 40.
 
 | Factor | Input | Curve (value → score) | Weight |
 |---|---|---|---|
 | Precipitation | Mean of 2 sub-scores: maximum probability (20% → 1 · 80% → 0) and daytime quantity (0.5 mm → 1 · 5 mm → 0) | – | 30% |
 | Thermal comfort | `apparent_temperature`, daytime mean (°C) | 0 → 0 · 16 → 1 · 24 → 1 · 32 → 0 | 40% |
 | Sky | `sunshine_duration ÷ daylight_duration` | 0 → 0.4 · 0.6 → 1 | 20% |
-| Wind | `wind_speed_10m_max` (km/h) | 20 → 1 · 45 → 0 | 10% |
+| Wind | `wind_speed_10m`, daytime maximum (km/h) | 20 → 1 · 45 → 0 | 10% |
 
 **Other rules:**
 

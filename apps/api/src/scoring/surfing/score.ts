@@ -105,7 +105,7 @@ export function scoreSurfing({
 /**
  * Sunrise to sunset. Temporary rule when the forecast has no sunrise or
  * sunset (for example, polar night): 09:00 to 18:00. Refer to
- * future-improvements.md, item 1.2.
+ * future-improvements.md, item 1.1.
  */
 function daylightWindow({
   forecast,

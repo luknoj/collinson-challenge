@@ -33,7 +33,7 @@ interface SkiOptions {
 function ski(options: SkiOptions = {}) {
   const forecast = buildForecast({
     hour: (slot) => ({ ...SKI_HOUR, ...options.hour?.(slot) }),
-    day: (d) => ({ windGustsMax: 20, ...options.day?.(d) }),
+    day: options.day,
   });
   return scoreSkiing({
     forecast,
@@ -173,14 +173,22 @@ describe('scoreSkiing', () => {
         key: 'SKI_TEMPERATURE',
       });
       expect(temperature?.subScore).toBeCloseTo(0.5);
+      // The UI shows the hours, because outdoor uses different hours.
+      expect(temperature?.params).toEqual({ startHour: 9, endHour: 16 });
     });
 
-    it('wind uses wind_gusts_10m_max', () => {
-      const wind = factor({
-        options: { day: () => ({ windGustsMax: 45 }) },
-        key: 'SKI_WIND',
-      });
+    it('wind uses the maximum hourly gusts in the lift hours', () => {
+      // 16:00 is the last gust stamp of the lift hours (09:00–16:00).
+      const gusts = ({ day, hour }: HourSlot) => {
+        if (day !== 0) return {};
+        if (hour === 16) return { windGusts: 45 };
+        if (hour === 17 || hour === 23) return { windGusts: 90 };
+        return {};
+      };
+      const wind = factor({ options: { hour: gusts }, key: 'SKI_WIND' });
+      expect(wind?.value).toBe(45);
       expect(wind?.subScore).toBeCloseTo(0.5);
+      expect(wind?.params).toEqual({ startHour: 9, endHour: 16 });
     });
 
     it('sky is 0.6 × visibility + 0.4 × sunshine', () => {
@@ -218,24 +226,28 @@ describe('scoreSkiing', () => {
     });
 
     it('rain on snow (more than 2 mm and more than 0 °C): maximum 30', () => {
+      // The rain is in 2 hours of the lift hours. The rain at night has no effect.
       const rainOnSnow = ({
-        rainSum,
+        rainMm,
         temperature,
       }: {
-        rainSum: number;
+        rainMm: number;
         temperature: number;
       }) => ({
-        hour: () => ({ temperature }),
-        day: () => ({ rainSum }),
+        hour: ({ day, hour }: HourSlot) => ({
+          temperature,
+          ...(day === 0 && (hour === 10 || hour === 16)
+            ? { rain: rainMm / 2 }
+            : {}),
+          ...(day === 0 && hour === 22 ? { rain: 10 } : {}),
+        }),
       });
-      expect(gateKeys(rainOnSnow({ rainSum: 2, temperature: 1 }))).toEqual([]);
-      expect(gateKeys(rainOnSnow({ rainSum: 2.1, temperature: 1 }))).toEqual([
+      expect(gateKeys(rainOnSnow({ rainMm: 2, temperature: 1 }))).toEqual([]);
+      expect(gateKeys(rainOnSnow({ rainMm: 2.1, temperature: 1 }))).toEqual([
         'RAIN_ON_SNOW_GATE',
       ]);
-      expect(today(rainOnSnow({ rainSum: 2.1, temperature: 1 })).score).toBe(
-        30,
-      );
-      expect(gateKeys(rainOnSnow({ rainSum: 5, temperature: 0 }))).toEqual([]);
+      expect(today(rainOnSnow({ rainMm: 2.1, temperature: 1 })).score).toBe(30);
+      expect(gateKeys(rainOnSnow({ rainMm: 5, temperature: 0 }))).toEqual([]);
     });
   });
 

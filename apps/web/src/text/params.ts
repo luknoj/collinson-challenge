@@ -23,6 +23,8 @@ export interface ParamReader {
   share(name: string): string;
   /** A direction in degrees ("270" → "west"). */
   compass(name: string): string;
+  /** An hour of the day ("9" → "09:00"). */
+  hour(name: string): string;
   /** The dates of the explanation ("Wed, Thu and Sat"). */
   days(): string;
   /** The day names of the explanation, 1 for each date. */
@@ -86,6 +88,10 @@ export function paramReader({
       if (value === null) return NO_DATA;
       const index = Math.round((((value % 360) + 360) % 360) / 45) % 8;
       return COMPASS[index] ?? NO_DATA;
+    },
+    hour: (name) => {
+      const value = numeric(name);
+      return value === null ? NO_DATA : `${String(value).padStart(2, '0')}:00`;
     },
     days: () => joinWords(dayNames()),
     dayNames,

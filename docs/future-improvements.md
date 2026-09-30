@@ -7,16 +7,7 @@ This document lists known problems in the plan and ideas for later versions.
 
 ## 1. Scoring rules (scoring.md)
 
-### 1.1 Activity windows
-
-- **Location:** [scoring.md](scoring.md), sections 3–5.
-- **Problem:** Section 2 tells you to use only the data for the activity window. But some inputs are daily values for 24 h: `rain_sum` (rain on snow gate) and `wind_gusts_10m_max` (skiing wind factor).
-- **Correction:** Calculate all rain totals and wind maxima from the hourly data in the activity window. Examples:
-  - Skiing: the sum of hourly `rain` from 09:00 to 16:00, and the maximum hourly `wind_gusts_10m` from 09:00 to 16:00.
-  - Outdoor: the same method from 09:00 to 18:00.
-  - Surfing: the same method from sunrise to sunset.
-
-### 1.2 Scoring limits that are not specified
+### 1.1 Scoring limits that are not specified
 
 - **Location:** [scoring.md](scoring.md), sections 2, 4 and 5.
 - **Problem:** Some rules have no exact value.

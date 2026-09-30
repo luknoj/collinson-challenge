@@ -68,6 +68,11 @@ function gate({
   };
 }
 
+/** The activity hours of a factor ("09:00–16:00"). */
+function hours(p: ParamReader): string {
+  return `${p.hour('startHour')}–${p.hour('endHour')}`;
+}
+
 const TRAVEL_CONDITIONS: Record<string, string> = {
   THUNDERSTORM: 'a thunderstorm',
   FREEZING_RAIN: 'freezing rain',
@@ -121,13 +126,15 @@ export const TEMPLATES: Record<ExplanationKey, Template> = {
   }),
   SKI_TEMPERATURE: factor({
     title: 'Temperature',
-    value: (p) => `feels like ${p.celsius('value')}`,
+    value: (p) => `feels like ${p.celsius('value')}, ${hours(p)}`,
+    details: (p) =>
+      `The mean "feels like" temperature in the lift hours (${hours(p)}). It includes the effect of the wind and the humidity. Outdoor sightseeing uses different hours, thus its value can be different.`,
   }),
   SKI_WIND: factor({
     title: 'Wind',
     value: (p) => `gusts ${p.kmh('value')}`,
-    details: () =>
-      'The strongest gusts of the day. Strong gusts make the lifts slow or stop them.',
+    details: (p) =>
+      `The strongest gusts in the lift hours (${hours(p)}). Strong gusts make the lifts slow or stop them.`,
   }),
   SKI_SKY: factor({
     title: 'Sky',
@@ -173,9 +180,9 @@ export const TEMPLATES: Record<ExplanationKey, Template> = {
   }),
   THERMAL_COMFORT: factor({
     title: 'Temperature',
-    value: (p) => `feels like ${p.celsius('value')}`,
-    details: () =>
-      'The "feels like" temperature includes the effect of the wind and the humidity.',
+    value: (p) => `feels like ${p.celsius('value')}, ${hours(p)}`,
+    details: (p) =>
+      `The mean "feels like" temperature in the daytime hours (${hours(p)}). It includes the effect of the wind and the humidity.`,
   }),
   OUTDOOR_SKY: factor({
     title: 'Sunshine',
@@ -184,6 +191,8 @@ export const TEMPLATES: Record<ExplanationKey, Template> = {
   OUTDOOR_WIND: factor({
     title: 'Wind',
     value: (p) => p.kmh('value'),
+    details: (p) =>
+      `The strongest wind speed in the daytime hours (${hours(p)}). The gusts are a different value, with their own gate.`,
   }),
 
   // Gates

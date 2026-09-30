@@ -34,7 +34,7 @@ export const outdoorConfig = {
       [0, 0.4],
       [0.6, 1],
     ],
-    /** wind_speed_10m_max (km/h) */
+    /** Maximum hourly wind_speed_10m in the daytime hours (km/h) */
     wind: [
       [20, 1],
       [45, 0],
@@ -53,7 +53,7 @@ export const outdoorConfig = {
 
   /**
    * Temporary values: scoring.md says only "a small quantity".
-   * Refer to future-improvements.md, item 1.2.
+   * Refer to future-improvements.md, item 1.1.
    */
   fog: { minHours: 3, points: -5 },
 };
