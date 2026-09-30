@@ -85,9 +85,11 @@ apps/web/src/
   api/                      Apollo Client, queries (.graphql)
   geocoding/
     geocoding.ts            direct calls to Geocoding /search and /get
+  place/
+    usePlace.ts             the town on the screen: from the URL (/get) or a selection
   generated/                typed documents (made by codegen, not in git)
   components/
-    SearchBox/              Base UI Combobox
+    SearchBox/              Base UI Combobox, useTownSearch (300 ms delay, cancel)
     PlaceHeader/
     ActivityRow/            header, day cards, summary or breakdown
     DayCard/
