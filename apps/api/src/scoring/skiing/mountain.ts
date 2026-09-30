@@ -16,13 +16,16 @@ export interface MountainTerrain {
  * scoring.md, section 3, mountain town note. Returns null when the terrain
  * around the town is not high.
  */
-export function mountainTerrain(
-  terrain: Terrain,
-  config: SkiingConfig = skiingConfig,
-): MountainTerrain | null {
+export function mountainTerrain({
+  terrain,
+  config = skiingConfig,
+}: {
+  terrain: Terrain;
+  config?: SkiingConfig;
+}): MountainTerrain | null {
   const m = config.mountain;
   if (terrain.grid.length === 0) return null;
-  const high = percentile(terrain.grid, m.gridPercentile);
+  const high = percentile({ values: terrain.grid, p: m.gridPercentile });
   const difference = high - terrain.center;
   if (difference < m.minHeightDifferenceM) return null;
   return {
@@ -36,24 +39,41 @@ export function mountainNote(mountain: MountainTerrain): Explanation {
   return {
     key: 'MOUNTAIN_NOTE',
     params: {
-      terrainElevation: round(mountain.terrainElevation, -1),
-      heightDifference: round(mountain.heightDifference, -1),
-      temperatureDifference: round(mountain.temperatureDifference),
+      terrainElevation: round({
+        value: mountain.terrainElevation,
+        decimals: -1,
+      }),
+      heightDifference: round({
+        value: mountain.heightDifference,
+        decimals: -1,
+      }),
+      temperatureDifference: round({ value: mountain.temperatureDifference }),
     },
   };
+}
+
+export interface MountainConditionsInput {
+  mountain: MountainTerrain;
+  /** °C, the mean temperature in the town in the lift hours */
+  townTemperature: number | null;
+  /** m, the mean freezing level in the lift hours */
+  freezingLevel: number | null;
+  /** mm, the precipitation in the lift hours */
+  precipitationMm: number | null;
+  config?: SkiingConfig;
 }
 
 /**
  * The conditions on the high terrain for 1 day. The snow altitude shows only
  * when the forecast has precipitation in the lift hours.
  */
-export function mountainConditions(
-  mountain: MountainTerrain,
-  townTemperature: number | null,
-  freezingLevel: number | null,
-  precipitationMm: number | null,
-  config: SkiingConfig = skiingConfig,
-): Explanation {
+export function mountainConditions({
+  mountain,
+  townTemperature,
+  freezingLevel,
+  precipitationMm,
+  config = skiingConfig,
+}: MountainConditionsInput): Explanation {
   const hasPrecipitation = precipitationMm !== null && precipitationMm > 0;
   return {
     key: 'MOUNTAIN_CONDITIONS',
@@ -61,13 +81,14 @@ export function mountainConditions(
       terrainTemperature:
         townTemperature === null
           ? null
-          : round(townTemperature - mountain.temperatureDifference),
+          : round({ value: townTemperature - mountain.temperatureDifference }),
       snowAltitude:
         hasPrecipitation && freezingLevel !== null
-          ? round(
-              freezingLevel - config.mountain.snowLineBelowFreezingLevelM,
-              -2,
-            )
+          ? round({
+              value:
+                freezingLevel - config.mountain.snowLineBelowFreezingLevelM,
+              decimals: -2,
+            })
           : null,
     },
   };

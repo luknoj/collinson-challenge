@@ -37,27 +37,35 @@ export interface SnowDepth {
  * depth[d] ≤ depth[d−1] + snowfall(09:00 on day d−1 → 09:00 on day d) / 100
  * For day 1, depth[d−1] is the snow depth at 09:00 on day −1 (past_days).
  */
-export function checkedSnowDepths(
-  forecast: Forecast,
-  dates: readonly string[],
-  config: SkiingConfig = skiingConfig,
-): SnowDepth[] {
+export function checkedSnowDepths({
+  forecast,
+  dates,
+  config = skiingConfig,
+}: {
+  forecast: Forecast;
+  dates: readonly string[];
+  config?: SkiingConfig;
+}): SnowDepth[] {
   const h = forecast.hourly;
   const hour = config.liftsOpenHour;
   const depthAt = (date: string) =>
-    valueAt(h.snowDepth, h.time.indexOf(at(date, hour)));
+    valueAt({ series: h.snowDepth, index: h.time.indexOf(at({ date, hour })) });
 
   const first = dates[0];
-  let previousDate = first === undefined ? '' : addDays(first, -1);
+  let previousDate =
+    first === undefined ? '' : addDays({ date: first, days: -1 });
   let previous = depthAt(previousDate);
 
   return dates.map((date) => {
     const raw = depthAt(date);
     let used = raw;
     if (raw !== null && previous !== null) {
-      const window = { start: at(previousDate, hour), end: at(date, hour) };
-      const snowfallCm =
-        sum(pick(h.snowfall, windowIndices(h.time, window, 'amount'))) ?? 0;
+      const window = {
+        start: at({ date: previousDate, hour }),
+        end: at({ date, hour }),
+      };
+      const indices = windowIndices({ times: h.time, window, kind: 'amount' });
+      const snowfallCm = sum(pick({ series: h.snowfall, indices })) ?? 0;
       used = Math.min(raw, previous + snowfallCm / 100);
     }
     previous = used;
@@ -66,22 +74,36 @@ export function checkedSnowDepths(
   });
 }
 
+export interface SkiingInput extends ScoringContext {
+  /** null when the Elevation API failed. */
+  terrain: Terrain | null;
+  config?: SkiingConfig;
+}
+
 /** scoring.md, section 3. */
-export function scoreSkiing(
-  { forecast, now }: ScoringContext,
-  terrain: Terrain | null,
-  config: SkiingConfig = skiingConfig,
-): ActivityResult {
-  const dates = forecastDates(forecast, now, sharedConfig.forecastDays);
-  const depths = checkedSnowDepths(forecast, dates, config);
+export function scoreSkiing({
+  forecast,
+  now,
+  terrain,
+  config = skiingConfig,
+}: SkiingInput): ActivityResult {
+  const dates = forecastDates({
+    forecast,
+    now,
+    count: sharedConfig.forecastDays,
+  });
+  const depths = checkedSnowDepths({ forecast, dates, config });
   const minDepth = config.gates.minSnowDepthM;
 
   if (!depths.some((d) => d.used !== null && d.used >= minDepth)) {
-    return notApplicable({ key: 'NO_SNOW', params: { minDepthM: minDepth } });
+    return notApplicable({
+      reason: { key: 'NO_SNOW', params: { minDepthM: minDepth } },
+    });
   }
 
   const notes: Explanation[] = [];
-  const mountain = terrain === null ? null : mountainTerrain(terrain, config);
+  const mountain =
+    terrain === null ? null : mountainTerrain({ terrain, config });
   if (terrain === null) {
     notes.push({
       key: 'TERRAIN_UNAVAILABLE',
@@ -91,70 +113,103 @@ export function scoreSkiing(
     notes.push(mountainNote(mountain));
   }
 
-  const nowLocal = localNow(now, forecast.utcOffsetSeconds);
+  const nowLocal = localNow({
+    now,
+    utcOffsetSeconds: forecast.utcOffsetSeconds,
+  });
   const days = dates.map((date, dayIndex) =>
-    scoreSkiingDay(
+    scoreSkiingDay({
       forecast,
       date,
       dayIndex,
-      depths[dayIndex]!,
+      depth: depths[dayIndex]!,
       mountain,
       nowLocal,
       config,
-    ),
+    }),
   );
-  return buildActivityResult(days, notes);
+  return buildActivityResult({ days, notes });
 }
 
-function scoreSkiingDay(
-  forecast: Forecast,
-  date: string,
-  dayIndex: number,
-  depth: SnowDepth,
-  mountain: MountainTerrain | null,
-  nowLocal: string,
-  config: SkiingConfig,
-): DayScore {
+function scoreSkiingDay({
+  forecast,
+  date,
+  dayIndex,
+  depth,
+  mountain,
+  nowLocal,
+  config,
+}: {
+  forecast: Forecast;
+  date: string;
+  dayIndex: number;
+  depth: SnowDepth;
+  mountain: MountainTerrain | null;
+  nowLocal: string;
+  config: SkiingConfig;
+}): DayScore {
   const { curves, factors, gates, skyParts } = config;
   const h = forecast.hourly;
   const lift = {
-    start: at(date, config.window.startHour),
-    end: at(date, config.window.endHour),
+    start: at({ date, hour: config.window.startHour }),
+    end: at({ date, hour: config.window.endHour }),
   };
-  const instant = windowIndices(h.time, lift, 'instant');
-  const amount = windowIndices(h.time, lift, 'amount');
+  const instant = windowIndices({
+    times: h.time,
+    window: lift,
+    kind: 'instant',
+  });
+  const amount = windowIndices({ times: h.time, window: lift, kind: 'amount' });
+  const hourly = (series: (typeof h)['temperature']) =>
+    pick({ series, indices: instant });
 
   const freshWindow = {
-    start: at(addDays(date, -config.freshSnowHours / 24), config.liftsOpenHour),
-    end: at(date, config.liftsOpenHour),
+    start: at({
+      date: addDays({ date, days: -config.freshSnowHours / 24 }),
+      hour: config.liftsOpenHour,
+    }),
+    end: at({ date, hour: config.liftsOpenHour }),
   };
   const freshSnowCm = sum(
-    pick(h.snowfall, windowIndices(h.time, freshWindow, 'amount')),
+    pick({
+      series: h.snowfall,
+      indices: windowIndices({
+        times: h.time,
+        window: freshWindow,
+        kind: 'amount',
+      }),
+    }),
   );
-  const meanApparent = mean(pick(h.apparentTemperature, instant));
-  const meanTemperature = mean(pick(h.temperature, instant));
-  const visibilityM = mean(pick(h.visibility, instant));
+  const meanApparent = mean(hourly(h.apparentTemperature));
+  const meanTemperature = mean(hourly(h.temperature));
+  const visibilityM = mean(hourly(h.visibility));
   const visibilityKm = visibilityM === null ? null : visibilityM / 1000;
-  const codes = pick(h.weatherCode, instant);
+  const codes = hourly(h.weatherCode);
 
   const d = forecast.daily.date.indexOf(date);
   const daily = forecast.daily;
-  const gustsMax = valueAt(daily.windGustsMax, d);
-  const rainSum = valueAt(daily.rainSum, d);
-  const sunshineRatio = ratio(
-    valueAt(daily.sunshineDuration, d),
-    valueAt(daily.daylightDuration, d),
-  );
+  const gustsMax = valueAt({ series: daily.windGustsMax, index: d });
+  const rainSum = valueAt({ series: daily.rainSum, index: d });
+  const sunshineRatio = ratio({
+    part: valueAt({ series: daily.sunshineDuration, index: d }),
+    whole: valueAt({ series: daily.daylightDuration, index: d }),
+  });
 
   const skyScore = weightedParts([
-    [
-      skyParts.visibility.weight,
-      evaluateOptional(curves.visibility, visibilityKm),
-    ],
-    [
-      skyParts.sunshine.weight,
-      evaluateOptional(curves.sunshineRatio, sunshineRatio),
-    ],
+    {
+      weight: skyParts.visibility.weight,
+      value: evaluateOptional({
+        curve: curves.visibility,
+        value: visibilityKm,
+      }),
+    },
+    {
+      weight: skyParts.sunshine.weight,
+      value: evaluateOptional({
+        curve: curves.sunshineRatio,
+        value: sunshineRatio,
+      }),
+    },
   ]);
 
   const notes: Explanation[] = [];
@@ -167,52 +222,63 @@ function scoreSkiingDay(
       key: 'SNOW_DEPTH_CORRECTED',
       params: {
         forecastDepthM: depth.forecast,
-        usedDepthM: round(depth.used, 2),
+        usedDepthM: round({ value: depth.used, decimals: 2 }),
       },
     });
   }
   if (mountain) {
     notes.push(
-      mountainConditions(
+      mountainConditions({
         mountain,
-        meanTemperature,
-        mean(pick(h.freezingLevelHeight, instant)),
-        sum(pick(h.precipitation, amount)),
+        townTemperature: meanTemperature,
+        freezingLevel: mean(hourly(h.freezingLevelHeight)),
+        precipitationMm: sum(
+          pick({ series: h.precipitation, indices: amount }),
+        ),
         config,
-      ),
+      }),
     );
   }
 
   return buildDayScore({
     date,
     dayIndex,
-    ended: isEnded(nowLocal, lift.end),
+    ended: isEnded({ localNow: nowLocal, windowEnd: lift.end }),
     factors: [
       {
         key: 'SNOW_BASE',
         weight: factors.snowBase.weight,
-        subScore: evaluateOptional(curves.snowBase, depth.used),
+        subScore: evaluateOptional({
+          curve: curves.snowBase,
+          value: depth.used,
+        }),
         value: depth.used,
         unit: 'm',
       },
       {
         key: 'FRESH_SNOW',
         weight: factors.freshSnow.weight,
-        subScore: evaluateOptional(curves.freshSnow, freshSnowCm),
+        subScore: evaluateOptional({
+          curve: curves.freshSnow,
+          value: freshSnowCm,
+        }),
         value: freshSnowCm,
         unit: 'cm',
       },
       {
         key: 'SKI_TEMPERATURE',
         weight: factors.temperature.weight,
-        subScore: evaluateOptional(curves.temperature, meanApparent),
+        subScore: evaluateOptional({
+          curve: curves.temperature,
+          value: meanApparent,
+        }),
         value: meanApparent,
         unit: '°C',
       },
       {
         key: 'SKI_WIND',
         weight: factors.wind.weight,
-        subScore: evaluateOptional(curves.wind, gustsMax),
+        subScore: evaluateOptional({ curve: curves.wind, value: gustsMax }),
         value: gustsMax,
         unit: 'km/h',
       },
@@ -261,11 +327,11 @@ function scoreSkiingDay(
 
 /** Weighted mean of the parts that have data. Null when no part has data. */
 function weightedParts(
-  parts: readonly (readonly [number, number | null])[],
+  parts: readonly { weight: number; value: number | null }[],
 ): number | null {
   let total = 0;
   let weights = 0;
-  for (const [weight, value] of parts) {
+  for (const { weight, value } of parts) {
     if (value === null) continue;
     total += weight * value;
     weights += weight;

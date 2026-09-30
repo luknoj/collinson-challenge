@@ -18,10 +18,13 @@ export type CoastResult =
  * scoring.md, section 4, step 1–2: the points with an elevation of exactly
  * 0 m are in the sea. Their mean direction is the coast direction.
  */
-export function estimateCoastDirection(
-  ring: readonly RingPoint[],
-  config: SurfingConfig = surfingConfig,
-): CoastResult {
+export function estimateCoastDirection({
+  ring,
+  config = surfingConfig,
+}: {
+  ring: readonly RingPoint[];
+  config?: SurfingConfig;
+}): CoastResult {
   const sea = ring.filter((p) => p.elevation === 0).map((p) => p.bearing);
   const m = circularMean(sea);
   if (
@@ -52,12 +55,16 @@ export type WindType = 'ONSHORE' | 'CROSS_SHORE' | 'OFFSHORE';
  * wind comes from. The coast direction points from the town to the sea. Thus,
  * a small angle means that the wind comes from the sea (onshore).
  */
-export function windType(
-  windFrom: number,
-  coastDirection: number,
-  config: SurfingConfig = surfingConfig,
-): { type: WindType; angle: number } {
-  const angle = angleBetween(windFrom, coastDirection);
+export function windType({
+  windFrom,
+  coastDirection,
+  config = surfingConfig,
+}: {
+  windFrom: number;
+  coastDirection: number;
+  config?: SurfingConfig;
+}): { type: WindType; angle: number } {
+  const angle = angleBetween({ a: windFrom, b: coastDirection });
   const w = config.windDirection;
   if (angle <= w.onshoreMaxAngle) return { type: 'ONSHORE', angle };
   if (angle >= w.offshoreMinAngle) return { type: 'OFFSHORE', angle };

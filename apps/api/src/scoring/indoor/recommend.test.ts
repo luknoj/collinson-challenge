@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { scoreOutdoor } from '../outdoor/score.js';
 import {
+  atHour,
   buildForecast,
-  context,
+  NOW,
   onDay,
   type ForecastOptions,
+  type HourSlot,
   type HourValues,
 } from '../testing/fixtures.js';
 import type { Place } from '../weather.js';
@@ -12,23 +14,27 @@ import { levelFor, recommendIndoor, townSize } from './recommend.js';
 
 const place: Place = { population: 50_000, featureCode: 'PPL' };
 
-function indoor(options: ForecastOptions = {}, now?: Date) {
-  const ctx = context(buildForecast(options), now);
-  return recommendIndoor(ctx, scoreOutdoor(ctx), place);
+function indoor({
+  options = {},
+  now = NOW,
+}: { options?: ForecastOptions; now?: Date } = {}) {
+  const forecast = buildForecast(options);
+  const outdoor = scoreOutdoor({ forecast, now });
+  return recommendIndoor({ forecast, outdoor, place });
 }
 
-const today = (options: ForecastOptions = {}) => indoor(options).days[0]!;
-const atNoon = (values: Partial<HourValues>) => (d: number, h: number) =>
-  d === 0 && h === 12 ? values : {};
+const today = (options: ForecastOptions = {}) => indoor({ options }).days[0]!;
+const atNoon = (values: Partial<HourValues>) =>
+  atHour({ day: 0, hour: 12, values });
 const travel = (options: ForecastOptions) =>
   today(options).hints.find((h) => h.key === 'TRAVEL_HINT')?.params?.conditions;
 
 /** Rain all day: 8 mm, probability 90%. The outdoor score is 25. */
-const rainyDay = (d: number, h: number) =>
-  d === 0
+const rainyDay = ({ day, hour }: HourSlot) =>
+  day === 0
     ? {
         precipitationProbability: 90,
-        precipitation: h >= 10 && h <= 17 ? 1 : 0,
+        precipitation: hour >= 10 && hour <= 17 ? 1 : 0,
       }
     : {};
 
@@ -40,8 +46,8 @@ describe('levelFor', () => {
     [59, 'GOOD_ALTERNATIVE'],
     [60, 'SAVE_FOR_LATER'],
     [100, 'SAVE_FOR_LATER'],
-  ])('outdoor score %i gives %s', (score, level) => {
-    expect(levelFor(score)).toBe(level);
+  ])('outdoor score %i gives %s', (outdoorScore, level) => {
+    expect(levelFor({ outdoorScore })).toBe(level);
   });
 });
 
@@ -55,7 +61,7 @@ describe('recommendIndoor', () => {
 
   it('gives the worst outdoor factor as the main cause when no gate has an effect', () => {
     const day = today({
-      hour: onDay(0, { apparentTemperature: 0 }),
+      hour: onDay({ day: 0, values: { apparentTemperature: 0 } }),
       day: () => ({ sunshineDuration: 0 }),
     });
     expect(day.level).toBe('GOOD_ALTERNATIVE');
@@ -71,22 +77,27 @@ describe('recommendIndoor', () => {
   });
 
   describe('busy hint', () => {
-    const rain = (probability: number, mm: number) => ({
-      hour: (d: number, h: number) =>
-        d === 0
-          ? {
-              precipitationProbability: probability,
-              precipitation: h === 12 ? mm : 0,
-            }
-          : {},
-    });
-    const hasBusy = (options: ForecastOptions) =>
-      today(options).hints.some((h) => h.key === 'BUSY_HINT');
+    const hasBusy = ({
+      probability,
+      mm,
+    }: {
+      probability: number;
+      mm: number;
+    }) =>
+      today({
+        hour: ({ day, hour }) =>
+          day === 0
+            ? {
+                precipitationProbability: probability,
+                precipitation: hour === 12 ? mm : 0,
+              }
+            : {},
+      }).hints.some((h) => h.key === 'BUSY_HINT');
 
     it('shows at a probability of 60% or more and 1 mm or more', () => {
-      expect(hasBusy(rain(60, 1))).toBe(true);
-      expect(hasBusy(rain(59, 1))).toBe(false);
-      expect(hasBusy(rain(60, 0.9))).toBe(false);
+      expect(hasBusy({ probability: 60, mm: 1 })).toBe(true);
+      expect(hasBusy({ probability: 59, mm: 1 })).toBe(false);
+      expect(hasBusy({ probability: 60, mm: 0.9 })).toBe(false);
     });
   });
 
@@ -126,17 +137,22 @@ describe('recommendIndoor', () => {
   });
 
   describe('week', () => {
+    const rainAllWeek = ({ hour }: HourSlot) => rainyDay({ day: 0, hour });
+
     it('counts the recommended days, without an ended day', () => {
-      const rainAllWeek = (d: number, h: number) => rainyDay(0, h);
-      expect(indoor({ hour: rainAllWeek }).recommendedDays).toBe(7);
+      expect(indoor({ options: { hour: rainAllWeek } }).recommendedDays).toBe(
+        7,
+      );
       expect(
-        indoor({ hour: rainAllWeek }, new Date('2026-01-12T17:00:00Z'))
-          .recommendedDays,
+        indoor({
+          options: { hour: rainAllWeek },
+          now: new Date('2026-01-12T17:00:00Z'),
+        }).recommendedDays,
       ).toBe(6);
     });
 
     it('lists the recommended and busy days in the summary', () => {
-      const summary = indoor({ hour: rainyDay }).summary;
+      const summary = indoor({ options: { hour: rainyDay } }).summary;
       expect(summary).toContainEqual({
         key: 'INDOOR_RECOMMENDED_DAYS',
         days: ['2026-01-12'],
@@ -165,6 +181,6 @@ describe('townSize', () => {
     [{ population: null, featureCode: 'PPL' }, 'TOWN_SIZE_NO_DATA'],
     [{ population: null, featureCode: null }, 'TOWN_SIZE_NO_DATA'],
   ])('%o gives %s', (p, key) => {
-    expect(townSize(p).key).toBe(key);
+    expect(townSize({ place: p }).key).toBe(key);
   });
 });

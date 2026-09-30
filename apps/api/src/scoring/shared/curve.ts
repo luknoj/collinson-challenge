@@ -5,7 +5,13 @@ import type { Curve } from './config.js';
  * the score changes linearly. Below the first point and above the last point,
  * the score does not change.
  */
-export function evaluateCurve(curve: Curve, value: number): number {
+export function evaluateCurve({
+  curve,
+  value,
+}: {
+  curve: Curve;
+  value: number;
+}): number {
   const first = curve[0];
   const last = curve[curve.length - 1];
   if (!first || !last) throw new Error('A curve needs at least 1 point.');
@@ -24,9 +30,12 @@ export function evaluateCurve(curve: Curve, value: number): number {
 }
 
 /** Returns null when the value is null. */
-export function evaluateOptional(
-  curve: Curve,
-  value: number | null,
-): number | null {
-  return value === null ? null : evaluateCurve(curve, value);
+export function evaluateOptional({
+  curve,
+  value,
+}: {
+  curve: Curve;
+  value: number | null;
+}): number | null {
+  return value === null ? null : evaluateCurve({ curve, value });
 }

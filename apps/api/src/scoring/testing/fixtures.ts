@@ -1,13 +1,7 @@
 // Test data builders. Day 0 is today. Days −3 to −1 are from past_days.
 
 import { addDays, at } from '../shared/time.js';
-import type {
-  Forecast,
-  MarineHourly,
-  RingPoint,
-  ScoringContext,
-  Terrain,
-} from '../weather.js';
+import type { Forecast, MarineHourly, RingPoint, Terrain } from '../weather.js';
 
 export const TODAY = '2026-01-12';
 /** 08:00 local time (UTC+1): before all activity windows. */
@@ -70,7 +64,7 @@ export const DEFAULT_DAY: Omit<DayValues, 'sunrise' | 'sunset'> = {
 
 export interface ForecastOptions {
   /** Values for 1 hour. `day` is from −3 to 6. */
-  hour?: (day: number, hour: number) => Partial<HourValues>;
+  hour?: (slot: HourSlot) => Partial<HourValues>;
   day?: (day: number) => Partial<DayValues>;
 }
 
@@ -81,7 +75,7 @@ export function hourTimes(): string[] {
   const times: string[] = [];
   for (let day = -PAST_DAYS; day < DAYS - PAST_DAYS; day++) {
     for (let hour = 0; hour < 24; hour++)
-      times.push(at(addDays(TODAY, day), hour));
+      times.push(at({ date: addDays({ date: TODAY, days: day }), hour }));
   }
   return times;
 }
@@ -90,12 +84,12 @@ export function buildForecast(options: ForecastOptions = {}): Forecast {
   const rows: HourValues[] = [];
   for (let day = -PAST_DAYS; day < DAYS - PAST_DAYS; day++) {
     for (let hour = 0; hour < 24; hour++) {
-      rows.push({ ...DEFAULT_HOUR, ...options.hour?.(day, hour) });
+      rows.push({ ...DEFAULT_HOUR, ...options.hour?.({ day, hour }) });
     }
   }
   const days: (DayValues & { date: string })[] = [];
   for (let day = -PAST_DAYS; day < DAYS - PAST_DAYS; day++) {
-    const date = addDays(TODAY, day);
+    const date = addDays({ date: TODAY, days: day });
     days.push({
       date,
       sunrise: `${date}T07:00`,
@@ -154,12 +148,12 @@ export const DEFAULT_MARINE: MarineValues = {
 };
 
 export function buildMarine(
-  values?: (day: number, hour: number) => Partial<MarineValues>,
+  values?: (slot: HourSlot) => Partial<MarineValues>,
 ): MarineHourly {
   const rows: MarineValues[] = [];
   for (let day = -PAST_DAYS; day < DAYS - PAST_DAYS; day++) {
     for (let hour = 0; hour < 24; hour++)
-      rows.push({ ...DEFAULT_MARINE, ...values?.(day, hour) });
+      rows.push({ ...DEFAULT_MARINE, ...values?.({ day, hour }) });
   }
   const col = <K extends keyof MarineValues>(k: K) => rows.map((r) => r[k]);
   return {
@@ -208,14 +202,29 @@ export function terrain(
   };
 }
 
-export function context(forecast: Forecast, now: Date = NOW): ScoringContext {
-  return { forecast, now };
+/** The time of 1 hour in the test data. `day` is from −3 to 6. */
+export interface HourSlot {
+  day: number;
+  hour: number;
 }
 
 /** The hour values for all hours of 1 day. */
-export function onDay(
-  target: number,
-  values: Partial<HourValues>,
-): (day: number, hour: number) => Partial<HourValues> {
-  return (day) => (day === target ? values : {});
+export function onDay({
+  day: target,
+  values,
+}: {
+  day: number;
+  values: Partial<HourValues>;
+}): (slot: HourSlot) => Partial<HourValues> {
+  return ({ day }) => (day === target ? values : {});
+}
+
+/** The values for 1 hour of 1 day. */
+export function atHour<T>({
+  day: targetDay,
+  hour: targetHour,
+  values,
+}: HourSlot & { values: T }): (slot: HourSlot) => T | Record<string, never> {
+  return ({ day, hour }) =>
+    day === targetDay && hour === targetHour ? values : {};
 }

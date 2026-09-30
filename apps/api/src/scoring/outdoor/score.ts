@@ -1,4 +1,4 @@
-import { sharedConfig } from '../shared/config.js';
+import { sharedConfig, type HourWindow } from '../shared/config.js';
 import { evaluateOptional } from '../shared/curve.js';
 import { buildDayScore, type GateInput } from '../shared/day.js';
 import {
@@ -35,71 +35,103 @@ export interface SightseeingDay {
   codes: number[];
 }
 
-export function sightseeingDay(
-  forecast: Forecast,
-  date: string,
+export function sightseeingDay({
+  forecast,
+  date,
   window = sharedConfig.windows.sightseeing,
-): SightseeingDay {
+}: {
+  forecast: Forecast;
+  date: string;
+  window?: HourWindow;
+}): SightseeingDay {
   const h = forecast.hourly;
   const range = {
-    start: at(date, window.startHour),
-    end: at(date, window.endHour),
+    start: at({ date, hour: window.startHour }),
+    end: at({ date, hour: window.endHour }),
   };
-  const instant = windowIndices(h.time, range, 'instant');
-  const amount = windowIndices(h.time, range, 'amount');
-  const apparent = pick(h.apparentTemperature, instant);
+  const instant = windowIndices({
+    times: h.time,
+    window: range,
+    kind: 'instant',
+  });
+  const amount = windowIndices({
+    times: h.time,
+    window: range,
+    kind: 'amount',
+  });
+  const apparent = pick({ series: h.apparentTemperature, indices: instant });
   return {
-    maxProbability: max(pick(h.precipitationProbability, amount)),
-    precipitationMm: sum(pick(h.precipitation, amount)),
-    snowfallCm: sum(pick(h.snowfall, amount)),
+    maxProbability: max(
+      pick({ series: h.precipitationProbability, indices: amount }),
+    ),
+    precipitationMm: sum(pick({ series: h.precipitation, indices: amount })),
+    snowfallCm: sum(pick({ series: h.snowfall, indices: amount })),
     meanApparent: mean(apparent),
     maxApparent: max(apparent),
     minApparent: min(apparent),
-    maxGusts: max(pick(h.windGusts, amount)),
-    codes: pick(h.weatherCode, instant),
+    maxGusts: max(pick({ series: h.windGusts, indices: amount })),
+    codes: pick({ series: h.weatherCode, indices: instant }),
   };
 }
 
-/** scoring.md, section 5. */
-export function scoreOutdoor(
-  { forecast, now }: ScoringContext,
-  config: OutdoorConfig = outdoorConfig,
-): ActivityResult {
-  const nowLocal = localNow(now, forecast.utcOffsetSeconds);
-  const days = forecastDates(forecast, now, sharedConfig.forecastDays).map(
-    (date, dayIndex) =>
-      scoreOutdoorDay(forecast, date, dayIndex, nowLocal, config),
-  );
-  return buildActivityResult(days, []);
+export interface OutdoorInput extends ScoringContext {
+  config?: OutdoorConfig;
 }
 
-function scoreOutdoorDay(
-  forecast: Forecast,
-  date: string,
-  dayIndex: number,
-  nowLocal: string,
-  config: OutdoorConfig,
-): DayScore {
+/** scoring.md, section 5. */
+export function scoreOutdoor({
+  forecast,
+  now,
+  config = outdoorConfig,
+}: OutdoorInput): ActivityResult {
+  const nowLocal = localNow({
+    now,
+    utcOffsetSeconds: forecast.utcOffsetSeconds,
+  });
+  const dates = forecastDates({
+    forecast,
+    now,
+    count: sharedConfig.forecastDays,
+  });
+  const days = dates.map((date, dayIndex) =>
+    scoreOutdoorDay({ forecast, date, dayIndex, nowLocal, config }),
+  );
+  return buildActivityResult({ days, notes: [] });
+}
+
+function scoreOutdoorDay({
+  forecast,
+  date,
+  dayIndex,
+  nowLocal,
+  config,
+}: {
+  forecast: Forecast;
+  date: string;
+  dayIndex: number;
+  nowLocal: string;
+  config: OutdoorConfig;
+}): DayScore {
   const { curves, gates, factors } = config;
   const codes = sharedConfig.weatherCodes;
-  const w = sightseeingDay(forecast, date, config.window);
+  const w = sightseeingDay({ forecast, date, window: config.window });
   const d = forecast.daily.date.indexOf(date);
   const daily = forecast.daily;
-  const sunshineRatio = ratio(
-    valueAt(daily.sunshineDuration, d),
-    valueAt(daily.daylightDuration, d),
-  );
-  const windMax = valueAt(daily.windSpeedMax, d);
-  const uv = valueAt(daily.uvIndexMax, d);
+  const sunshineRatio = ratio({
+    part: valueAt({ series: daily.sunshineDuration, index: d }),
+    whole: valueAt({ series: daily.daylightDuration, index: d }),
+  });
+  const windMax = valueAt({ series: daily.windSpeedMax, index: d });
+  const uv = valueAt({ series: daily.uvIndexMax, index: d });
 
-  const probabilityScore = evaluateOptional(
-    curves.precipitationProbability,
-    w.maxProbability,
-  );
-  const amountScore = evaluateOptional(
-    curves.precipitationAmount,
-    w.precipitationMm,
-  );
+  const probabilityScore = evaluateOptional({
+    curve: curves.precipitationProbability,
+    value: w.maxProbability,
+  });
+  const amountScore = evaluateOptional({
+    curve: curves.precipitationAmount,
+    value: w.precipitationMm,
+  });
   const precipitationParts = [probabilityScore, amountScore].filter(
     (v) => v !== null,
   );
@@ -167,7 +199,10 @@ function scoreOutdoorDay(
   return buildDayScore({
     date,
     dayIndex,
-    ended: isEnded(nowLocal, at(date, config.window.endHour)),
+    ended: isEnded({
+      localNow: nowLocal,
+      windowEnd: at({ date, hour: config.window.endHour }),
+    }),
     factors: [
       {
         key: 'PRECIPITATION',
@@ -180,21 +215,27 @@ function scoreOutdoorDay(
       {
         key: 'THERMAL_COMFORT',
         weight: factors.thermalComfort.weight,
-        subScore: evaluateOptional(curves.thermalComfort, w.meanApparent),
+        subScore: evaluateOptional({
+          curve: curves.thermalComfort,
+          value: w.meanApparent,
+        }),
         value: w.meanApparent,
         unit: '°C',
       },
       {
         key: 'OUTDOOR_SKY',
         weight: factors.sky.weight,
-        subScore: evaluateOptional(curves.sunshineRatio, sunshineRatio),
+        subScore: evaluateOptional({
+          curve: curves.sunshineRatio,
+          value: sunshineRatio,
+        }),
         value: sunshineRatio,
         unit: null,
       },
       {
         key: 'OUTDOOR_WIND',
         weight: factors.wind.weight,
-        subScore: evaluateOptional(curves.wind, windMax),
+        subScore: evaluateOptional({ curve: curves.wind, value: windMax }),
         value: windMax,
         unit: 'km/h',
       },
@@ -205,10 +246,13 @@ function scoreOutdoorDay(
   });
 }
 
-export function ratio(
-  part: number | null,
-  whole: number | null,
-): number | null {
+export function ratio({
+  part,
+  whole,
+}: {
+  part: number | null;
+  whole: number | null;
+}): number | null {
   if (part === null || whole === null || whole <= 0) return null;
   return part / whole;
 }

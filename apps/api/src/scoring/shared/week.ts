@@ -22,7 +22,13 @@ export function confidenceFor(dayIndex: number): Confidence {
  * scoring.md, section 7: the window of today has ended when the local time
  * of the town is at or after the end of the window.
  */
-export function isEnded(localNow: string, windowEnd: string): boolean {
+export function isEnded({
+  localNow,
+  windowEnd,
+}: {
+  localNow: string;
+  windowEnd: string;
+}): boolean {
   return localNow >= windowEnd;
 }
 
@@ -43,10 +49,13 @@ export function weeklyScore(days: readonly DayScore[]): number | null {
   return Math.round(bestDayWeight * best + (1 - bestDayWeight) * topMean);
 }
 
-export function buildActivityResult(
-  days: DayScore[],
-  notes: Explanation[],
-): ActivityResult {
+export function buildActivityResult({
+  days,
+  notes,
+}: {
+  days: DayScore[];
+  notes: Explanation[];
+}): ActivityResult {
   const weekly = weeklyScore(days);
   return {
     status: 'OK',
@@ -59,10 +68,13 @@ export function buildActivityResult(
   };
 }
 
-export function notApplicable(
-  reason: Explanation,
-  notes: Explanation[] = [],
-): ActivityResult {
+export function notApplicable({
+  reason,
+  notes = [],
+}: {
+  reason: Explanation;
+  notes?: Explanation[];
+}): ActivityResult {
   return {
     status: 'NOT_APPLICABLE',
     notApplicableReason: reason,

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { buildDayScore, type DayInput, type FactorInput } from './day.js';
 
-const factor = (
-  key: FactorInput['key'],
-  weight: number,
-  subScore: number | null,
-): FactorInput => ({
+const factor = ({
+  key,
+  weight,
+  subScore,
+}: Pick<FactorInput, 'key' | 'weight' | 'subScore'>): FactorInput => ({
   key,
   weight,
   subScore,
@@ -18,8 +18,8 @@ const base: DayInput = {
   dayIndex: 0,
   ended: false,
   factors: [
-    factor('PRECIPITATION', 0.5, 1),
-    factor('THERMAL_COMFORT', 0.5, 0.5),
+    factor({ key: 'PRECIPITATION', weight: 0.5, subScore: 1 }),
+    factor({ key: 'THERMAL_COMFORT', weight: 0.5, subScore: 0.5 }),
   ],
 };
 
@@ -40,7 +40,7 @@ describe('buildDayScore', () => {
     expect(
       buildDayScore({
         ...base,
-        factors: [factor('PRECIPITATION', 1, 1)],
+        factors: [factor({ key: 'PRECIPITATION', weight: 1, subScore: 1 })],
         adjustments: [{ key: 'OFFSHORE_WIND', points: 5 }],
       }).score,
     ).toBe(100);
@@ -83,7 +83,7 @@ describe('buildDayScore', () => {
   it('rounds only the final score', () => {
     const day = buildDayScore({
       ...base,
-      factors: [factor('PRECIPITATION', 1, 0.576)],
+      factors: [factor({ key: 'PRECIPITATION', weight: 1, subScore: 0.576 })],
     });
     expect(day.factors[0]?.points).toBeCloseTo(57.6);
     expect(day.score).toBe(58);
@@ -93,10 +93,10 @@ describe('buildDayScore', () => {
     const day = buildDayScore({
       ...base,
       factors: [
-        factor('PRECIPITATION', 0.3, 1),
-        factor('THERMAL_COMFORT', 0.4, 0.5),
-        factor('OUTDOOR_SKY', 0.2, 0),
-        factor('OUTDOOR_WIND', 0.1, 0.9),
+        factor({ key: 'PRECIPITATION', weight: 0.3, subScore: 1 }),
+        factor({ key: 'THERMAL_COMFORT', weight: 0.4, subScore: 0.5 }),
+        factor({ key: 'OUTDOOR_SKY', weight: 0.2, subScore: 0 }),
+        factor({ key: 'OUTDOOR_WIND', weight: 0.1, subScore: 0.9 }),
       ],
     });
     expect(day.reasons.map((r) => r.key)).toEqual([
@@ -107,8 +107,10 @@ describe('buildDayScore', () => {
 
   it('gives no reasons when all factors are perfect', () => {
     expect(
-      buildDayScore({ ...base, factors: [factor('PRECIPITATION', 1, 1)] })
-        .reasons,
+      buildDayScore({
+        ...base,
+        factors: [factor({ key: 'PRECIPITATION', weight: 1, subScore: 1 })],
+      }).reasons,
     ).toEqual([]);
   });
 
@@ -116,8 +118,8 @@ describe('buildDayScore', () => {
     const day = buildDayScore({
       ...base,
       factors: [
-        factor('PRECIPITATION', 0.5, 0.8),
-        factor('THERMAL_COMFORT', 0.5, null),
+        factor({ key: 'PRECIPITATION', weight: 0.5, subScore: 0.8 }),
+        factor({ key: 'THERMAL_COMFORT', weight: 0.5, subScore: null }),
       ],
     });
     expect(day.score).toBe(80);

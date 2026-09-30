@@ -37,7 +37,7 @@ export function validateScoringConfigs(
     ['outdoor.factors', configs.outdoor.factors],
   ];
   for (const [name, group] of weightGroups)
-    errors.push(...checkWeights(name, group));
+    errors.push(...checkWeights({ name, group }));
 
   const curveGroups: [string, Record<string, Curve>][] = [
     ['skiing.curves', configs.skiing.curves],
@@ -46,7 +46,7 @@ export function validateScoringConfigs(
   ];
   for (const [group, curves] of curveGroups) {
     for (const [name, curve] of Object.entries(curves)) {
-      errors.push(...checkCurve(`${group}.${name}`, curve));
+      errors.push(...checkCurve({ name: `${group}.${name}`, curve }));
     }
   }
 
@@ -85,7 +85,13 @@ export function assertValidScoringConfigs(
   }
 }
 
-function checkWeights(name: string, group: Weights): string[] {
+function checkWeights({
+  name,
+  group,
+}: {
+  name: string;
+  group: Weights;
+}): string[] {
   const weights = Object.values(group).map((f) => f.weight);
   const errors: string[] = [];
   if (weights.some((w) => w < 0 || w > 1))
@@ -96,7 +102,7 @@ function checkWeights(name: string, group: Weights): string[] {
   return errors;
 }
 
-function checkCurve(name: string, curve: Curve): string[] {
+function checkCurve({ name, curve }: { name: string; curve: Curve }): string[] {
   const errors: string[] = [];
   if (curve.length < 2)
     errors.push(`${name}: a curve needs at least 2 points.`);

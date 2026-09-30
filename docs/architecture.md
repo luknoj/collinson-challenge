@@ -57,7 +57,7 @@ apps/api/src/
     dataLayer.ts            joined calls, cache, retries, time limit
   scoring/
     index.ts                the public functions of the scoring module
-    types.ts                result types (same shape as the schema), ExplanationKey list
+    types.ts                result types (same shape as the schema)
     weather.ts              the normalized weather model (input)
     shared/
       config.ts             labels, weekly score, confidence, windows, weather codes
@@ -318,7 +318,7 @@ enum ExplanationKey {
   NO_SEA_NEARBY
   MOUNTAIN_NOTE
   # … 1 key for each factor, gate, adjustment, note, hint and summary item.
-  # The full list is EXPLANATION_KEYS in apps/api/src/scoring/types.ts.
+  # The full list is in apps/api/src/schema.graphql.
 }
 
 scalar JSON
@@ -327,7 +327,7 @@ scalar JSON
 Rules for the schema:
 
 - **`params` uses a `JSON` scalar.** Each key has different values. The frontend has a TypeScript type for the `params` of each key.
-- **The keys are an `enum`.** The frontend has a `Record<ExplanationKey, Template>`. Thus, a missing template gives a TypeScript error.
+- **The keys are an `enum`.** The schema is the only source of the keys. Codegen (`enumsAsConst`) makes a constant object and a type in both apps, for example `ExplanationKey.SNOW_BASE`. The scoring code uses this type. The frontend has a `Record<ExplanationKey, Template>`. Thus, a missing template gives a TypeScript error.
 - **Scores are integers.** The factor points are decimals. The UI rounds them.
 - **Units are metric only.**
 - **There is no Geocoding query.** The frontend calls Geocoding directly (section 3).

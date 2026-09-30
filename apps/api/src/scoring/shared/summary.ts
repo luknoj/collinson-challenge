@@ -32,10 +32,10 @@ export function activitySummary(days: readonly DayScore[]): Explanation[] {
     items.push({ key: 'NO_GOOD_DAYS', params: { minScore: bestDayMinScore } });
   }
 
-  const trend = trendItem(
-    usable.filter(({ index }) => index <= 2).map(({ day }) => day),
-    usable.filter(({ index }) => index >= 4).map(({ day }) => day),
-  );
+  const trend = trendItem({
+    early: usable.filter(({ index }) => index <= 2).map(({ day }) => day),
+    late: usable.filter(({ index }) => index >= 4).map(({ day }) => day),
+  });
   if (trend) items.push(trend);
 
   items.push(...gateWarnings(usable.map(({ day }) => day)));
@@ -43,10 +43,13 @@ export function activitySummary(days: readonly DayScore[]): Explanation[] {
 }
 
 /** Compares the mean of days 1–3 with the mean of days 5–7. */
-function trendItem(
-  early: readonly DayScore[],
-  late: readonly DayScore[],
-): Explanation | null {
+function trendItem({
+  early,
+  late,
+}: {
+  early: readonly DayScore[];
+  late: readonly DayScore[];
+}): Explanation | null {
   if (early.length === 0 || late.length === 0) return null;
   const change = meanScore(late) - meanScore(early);
   if (Math.abs(change) < sharedConfig.summary.trendMinChange) return null;
@@ -68,7 +71,7 @@ function trendItem(
 
   return {
     key: change > 0 ? 'TREND_UP' : 'TREND_DOWN',
-    params: { change: round(change), factor },
+    params: { change: round({ value: change }), factor },
   };
 }
 

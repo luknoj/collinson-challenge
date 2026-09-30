@@ -4,6 +4,10 @@ const config: CodegenConfig = {
   schema: 'apps/api/src/schema.graphql',
   config: {
     useTypeImports: true,
+    // Enums become a constant object and a type, with the names from the
+    // schema (for example, ExplanationKey.SNOW_BASE).
+    enumsAsConst: true,
+    namingConvention: { enumValues: 'keep' },
   },
   generates: {
     'apps/api/src/generated/graphql.ts': {

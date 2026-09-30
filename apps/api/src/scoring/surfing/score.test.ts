@@ -1,22 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
+  atHour,
   buildForecast,
   buildMarine,
-  context,
   NO_MARINE,
+  NOW,
   ring,
   terrain,
   WEST_COAST,
+  type HourSlot,
   type HourValues,
   type MarineValues,
 } from '../testing/fixtures.js';
+import type { ExplanationKey } from '../types.js';
 import type { MarineHourly, Terrain } from '../weather.js';
 import { estimateCoastDirection, windType } from './coast.js';
 import { scoreSurfing } from './score.js';
 
 interface SurfOptions {
-  hour?: (day: number, hour: number) => Partial<HourValues>;
-  sea?: (day: number, hour: number) => Partial<MarineValues>;
+  hour?: (slot: HourSlot) => Partial<HourValues>;
+  sea?: (slot: HourSlot) => Partial<MarineValues>;
   marine?: MarineHourly | null;
   terrain?: Terrain | null;
   now?: Date;
@@ -24,27 +27,29 @@ interface SurfOptions {
 
 /** Default: 1.5 m at 12 s, clean waves, water 18 °C, wind 10 km/h. Score 100. */
 function surf(options: SurfOptions = {}) {
-  const marine =
-    options.marine === undefined ? buildMarine(options.sea) : options.marine;
-  return scoreSurfing(
-    context(buildForecast({ hour: options.hour }), options.now),
-    marine,
-    options.terrain === undefined
-      ? terrain({ ring: WEST_COAST })
-      : options.terrain,
-  );
+  return scoreSurfing({
+    forecast: buildForecast({ hour: options.hour }),
+    now: options.now ?? NOW,
+    marine:
+      options.marine === undefined ? buildMarine(options.sea) : options.marine,
+    terrain:
+      options.terrain === undefined
+        ? terrain({ ring: WEST_COAST })
+        : options.terrain,
+  });
 }
 
 const today = (options: SurfOptions = {}) => surf(options).days[0]!;
-const factor = (options: SurfOptions, key: string) =>
-  today(options).factors.find((f) => f.key === key);
+const factor = ({
+  options,
+  key,
+}: {
+  options: SurfOptions;
+  key: ExplanationKey;
+}) => today(options).factors.find((f) => f.key === key);
 const gateKeys = (options: SurfOptions) =>
   today(options).gates.map((g) => g.key);
-const atNoon =
-  <T>(values: T) =>
-  (d: number, h: number) =>
-    d === 0 && h === 12 ? values : {};
-const wind = (speed: number, from: number) => ({
+const wind = ({ speed, from }: { speed: number; from: number }) => ({
   hour: () => ({ windSpeed: speed, windDirection: from }),
 });
 
@@ -74,39 +79,40 @@ describe('scoreSurfing', () => {
       ['SWELL_PERIOD', { swellWavePeriod: 8.5 }, 0.5],
       ['WAVE_QUALITY', { windWaveHeight: 0.975 }, 0.5],
       ['WATER_COMFORT', { seaSurfaceTemperature: 14 }, 0.75],
-    ])('%s', (key, values, expected) => {
-      expect(factor({ sea: () => values }, key)?.subScore).toBeCloseTo(
-        expected,
-      );
+    ] as const)('%s', (key, values, expected) => {
+      expect(
+        factor({ options: { sea: () => values }, key })?.subScore,
+      ).toBeCloseTo(expected);
     });
 
     it('SURF_WIND_SPEED uses the mean wind from sunrise to sunset', () => {
-      expect(
-        factor({ hour: () => ({ windSpeed: 23.5 }) }, 'SURF_WIND_SPEED')
-          ?.subScore,
-      ).toBeCloseTo(0.5);
+      const windSpeed = factor({
+        options: { hour: () => ({ windSpeed: 23.5 }) },
+        key: 'SURF_WIND_SPEED',
+      });
+      expect(windSpeed?.subScore).toBeCloseTo(0.5);
     });
 
     it('ignores marine data outside sunrise to sunset', () => {
-      expect(
-        today({
-          sea: (d, h) => (d === 0 && h === 3 ? { swellWaveHeight: 6 } : {}),
-        }).score,
-      ).toBe(100);
+      const night = atHour({ day: 0, hour: 3, values: { swellWaveHeight: 6 } });
+      expect(today({ sea: night }).score).toBe(100);
     });
   });
 
   describe('gates', () => {
+    const swellAtNoon = (swellWaveHeight: number) => ({
+      sea: atHour({ day: 0, hour: 12, values: { swellWaveHeight } }),
+    });
+
     it('thunderstorm: 0', () => {
-      expect(today({ hour: atNoon({ weatherCode: 95 }) }).score).toBe(0);
+      const storm = atHour({ day: 0, hour: 12, values: { weatherCode: 95 } });
+      expect(today({ hour: storm }).score).toBe(0);
     });
 
     it('swell more than 4 m: maximum 20', () => {
-      expect(gateKeys({ sea: atNoon({ swellWaveHeight: 4 }) })).toEqual([]);
-      expect(gateKeys({ sea: atNoon({ swellWaveHeight: 4.1 }) })).toEqual([
-        'LARGE_SWELL_GATE',
-      ]);
-      expect(today({ sea: atNoon({ swellWaveHeight: 4.1 }) }).score).toBe(20);
+      expect(gateKeys(swellAtNoon(4))).toEqual([]);
+      expect(gateKeys(swellAtNoon(4.1))).toEqual(['LARGE_SWELL_GATE']);
+      expect(today(swellAtNoon(4.1)).score).toBe(20);
     });
 
     it('mean wind more than 30 km/h: maximum 35', () => {
@@ -118,39 +124,39 @@ describe('scoreSurfing', () => {
   });
 
   describe('wind direction (coast faces west, 270°)', () => {
-    const adjustment = (options: SurfOptions) => today(options).adjustments;
+    const adjustments = (options: SurfOptions) => today(options).adjustments;
     const windNote = (options: SurfOptions) =>
       today(options).notes.find((n) => n.key === 'WIND_DIRECTION')?.params
         ?.windType;
 
     it('onshore wind (0–45°): −10', () => {
-      expect(adjustment(wind(20, 270))).toMatchObject([
+      expect(adjustments(wind({ speed: 20, from: 270 }))).toMatchObject([
         { key: 'ONSHORE_WIND', points: -10 },
       ]);
-      expect(windNote(wind(20, 315))).toBe('ONSHORE');
+      expect(windNote(wind({ speed: 20, from: 315 }))).toBe('ONSHORE');
     });
 
     it('offshore wind (135–180°): +5', () => {
-      expect(adjustment(wind(20, 90))).toMatchObject([
+      expect(adjustments(wind({ speed: 20, from: 90 }))).toMatchObject([
         { key: 'OFFSHORE_WIND', points: 5 },
       ]);
-      expect(windNote(wind(20, 135))).toBe('OFFSHORE');
+      expect(windNote(wind({ speed: 20, from: 135 }))).toBe('OFFSHORE');
     });
 
     it('cross-shore wind (45–135°): no adjustment, with a note', () => {
-      expect(adjustment(wind(20, 0))).toEqual([]);
-      expect(windNote(wind(20, 0))).toBe('CROSS_SHORE');
+      expect(adjustments(wind({ speed: 20, from: 0 }))).toEqual([]);
+      expect(windNote(wind({ speed: 20, from: 0 }))).toBe('CROSS_SHORE');
     });
 
     it('no adjustment when the wind is less than 15 km/h', () => {
-      expect(adjustment(wind(14.9, 270))).toEqual([]);
-      expect(windNote(wind(14.9, 270))).toBe('LIGHT');
-      expect(adjustment(wind(15, 270))).toHaveLength(1);
+      expect(adjustments(wind({ speed: 14.9, from: 270 }))).toEqual([]);
+      expect(windNote(wind({ speed: 14.9, from: 270 }))).toBe('LIGHT');
+      expect(adjustments(wind({ speed: 15, from: 270 }))).toHaveLength(1);
     });
 
     it('no adjustment and a note when the coast direction is not clear', () => {
       const result = surf({
-        ...wind(20, 270),
+        ...wind({ speed: 20, from: 270 }),
         terrain: terrain({ ring: ring([0, 180]) }),
       });
       expect(result.days[0]?.adjustments).toEqual([]);
@@ -158,7 +164,7 @@ describe('scoreSurfing', () => {
     });
 
     it('no adjustment and a note when the terrain data is not available', () => {
-      const result = surf({ ...wind(20, 270), terrain: null });
+      const result = surf({ ...wind({ speed: 20, from: 270 }), terrain: null });
       expect(result.days[0]?.adjustments).toEqual([]);
       expect(result.notes).toEqual([
         { key: 'TERRAIN_UNAVAILABLE', params: { feature: 'COAST_DIRECTION' } },
@@ -174,7 +180,7 @@ describe('scoreSurfing', () => {
 
 describe('estimateCoastDirection', () => {
   it('gives the mean direction of the sea points', () => {
-    const result = estimateCoastDirection(WEST_COAST);
+    const result = estimateCoastDirection({ ring: WEST_COAST });
     expect(result.clear).toBe(true);
     if (result.clear) expect(result.coast.direction).toBeCloseTo(270);
   });
@@ -185,22 +191,22 @@ describe('estimateCoastDirection', () => {
       p.bearing === 292.5 && p.distanceKm === 3 ? { ...p, elevation: 50 } : p,
     );
     expect(four.filter((p) => p.elevation === 0)).toHaveLength(4);
-    expect(estimateCoastDirection(four).clear).toBe(true);
-    expect(estimateCoastDirection(three)).toMatchObject({
+    expect(estimateCoastDirection({ ring: four }).clear).toBe(true);
+    expect(estimateCoastDirection({ ring: three })).toMatchObject({
       clear: false,
       seaPoints: 3,
     });
   });
 
   it('needs 1 clear direction', () => {
-    expect(estimateCoastDirection(ring([0, 180])).clear).toBe(false);
+    expect(estimateCoastDirection({ ring: ring([0, 180]) }).clear).toBe(false);
   });
 
   it('uses only points with an elevation of exactly 0 m', () => {
     const lowLand = ring([]).map((p) =>
       p.bearing === 270 ? { ...p, elevation: 0.5 } : p,
     );
-    expect(estimateCoastDirection(lowLand).clear).toBe(false);
+    expect(estimateCoastDirection({ ring: lowLand }).clear).toBe(false);
   });
 });
 
@@ -212,7 +218,7 @@ describe('windType', () => {
     [136, 'CROSS_SHORE'],
     [135, 'OFFSHORE'],
     [90, 'OFFSHORE'],
-  ])('wind from %i° on a west coast is %s', (from, type) => {
-    expect(windType(from, 270).type).toBe(type);
+  ])('wind from %i° on a west coast is %s', (windFrom, type) => {
+    expect(windType({ windFrom, coastDirection: 270 }).type).toBe(type);
   });
 });

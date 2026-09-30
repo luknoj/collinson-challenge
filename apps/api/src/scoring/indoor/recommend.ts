@@ -8,54 +8,69 @@ import type {
   IndoorLevel,
   IndoorResult,
 } from '../types.js';
-import type { Forecast, Place, ScoringContext } from '../weather.js';
+import type { Forecast, Place } from '../weather.js';
 import { indoorConfig, type IndoorConfig } from './config.js';
 
 /**
  * scoring.md, section 6: indoor sightseeing is a recommendation from the
  * outdoor score of the same day. The hints do not change the level.
  */
-export function recommendIndoor(
-  { forecast }: ScoringContext,
-  outdoor: ActivityResult,
-  place: Place,
-  config: IndoorConfig = indoorConfig,
-): IndoorResult {
+export interface IndoorInput {
+  forecast: Forecast;
+  /** The outdoor result for the same place and week. */
+  outdoor: ActivityResult;
+  place: Place;
+  config?: IndoorConfig;
+}
+
+export function recommendIndoor({
+  forecast,
+  outdoor,
+  place,
+  config = indoorConfig,
+}: IndoorInput): IndoorResult {
   const days = outdoor.days.map((outdoorDay) =>
-    indoorDay(forecast, outdoorDay, config),
+    indoorDay({ forecast, outdoorDay, config }),
   );
   const usable = days.filter((d) => !d.ended);
   return {
     recommendedDays: usable.filter((d) => d.level === 'RECOMMENDED').length,
     days,
     summary: indoorSummary(usable),
-    townSize: townSize(place, config),
+    townSize: townSize({ place, config }),
   };
 }
 
-export function levelFor(
-  outdoorScore: number,
-  config: IndoorConfig = indoorConfig,
-): IndoorLevel {
+export function levelFor({
+  outdoorScore,
+  config = indoorConfig,
+}: {
+  outdoorScore: number;
+  config?: IndoorConfig;
+}): IndoorLevel {
   if (outdoorScore < config.levels.recommendedBelow) return 'RECOMMENDED';
   if (outdoorScore < config.levels.goodAlternativeBelow)
     return 'GOOD_ALTERNATIVE';
   return 'SAVE_FOR_LATER';
 }
 
-function indoorDay(
-  forecast: Forecast,
-  outdoorDay: DayScore,
-  config: IndoorConfig,
-): IndoorDay {
-  const level = levelFor(outdoorDay.score, config);
+function indoorDay({
+  forecast,
+  outdoorDay,
+  config,
+}: {
+  forecast: Forecast;
+  outdoorDay: DayScore;
+  config: IndoorConfig;
+}): IndoorDay {
+  const level = levelFor({ outdoorScore: outdoorDay.score, config });
   return {
     date: outdoorDay.date,
     level,
     ended: outdoorDay.ended,
     outdoorScore: outdoorDay.score,
     mainCause: level === 'SAVE_FOR_LATER' ? null : mainCause(outdoorDay),
-    hints: hints(forecast, outdoorDay.date, config),
+    hints: hints({ forecast, date: outdoorDay.date, config }),
   };
 }
 
@@ -67,12 +82,16 @@ function mainCause(day: DayScore): Explanation | null {
   return gate ?? day.reasons[0] ?? null;
 }
 
-function hints(
-  forecast: Forecast,
-  date: string,
-  config: IndoorConfig,
-): Explanation[] {
-  const w = sightseeingDay(forecast, date, config.window);
+function hints({
+  forecast,
+  date,
+  config,
+}: {
+  forecast: Forecast;
+  date: string;
+  config: IndoorConfig;
+}): Explanation[] {
+  const w = sightseeingDay({ forecast, date, window: config.window });
   const codes = sharedConfig.weatherCodes;
   const t = config.travel;
   const result: Explanation[] = [];
@@ -108,10 +127,13 @@ function hints(
   return result;
 }
 
-export function townSize(
-  place: Place,
-  config: IndoorConfig = indoorConfig,
-): Explanation {
+export function townSize({
+  place,
+  config = indoorConfig,
+}: {
+  place: Place;
+  config?: IndoorConfig;
+}): Explanation {
   const s = config.townSize;
   const { population, featureCode } = place;
   const params = { population, featureCode };

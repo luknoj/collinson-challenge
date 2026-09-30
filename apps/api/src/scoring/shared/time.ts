@@ -1,31 +1,50 @@
 import type { Forecast, Series } from '../weather.js';
 
 /** Adds days to a date (YYYY-MM-DD). */
-export function addDays(date: string, days: number): string {
+export function addDays({
+  date,
+  days,
+}: {
+  date: string;
+  days: number;
+}): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
 /** The local time of the town: "YYYY-MM-DDTHH:mm". */
-export function localNow(now: Date, utcOffsetSeconds: number): string {
+export function localNow({
+  now,
+  utcOffsetSeconds,
+}: {
+  now: Date;
+  utcOffsetSeconds: number;
+}): string {
   return new Date(now.getTime() + utcOffsetSeconds * 1000)
     .toISOString()
     .slice(0, 16);
 }
 
 /** "YYYY-MM-DDTHH:00" */
-export function at(date: string, hour: number): string {
+export function at({ date, hour }: { date: string; hour: number }): string {
   return `${date}T${String(hour).padStart(2, '0')}:00`;
 }
 
-/** The 7 forecast days, from today in the town. */
-export function forecastDates(
-  forecast: Forecast,
-  now: Date,
-  count: number,
-): string[] {
-  const today = localNow(now, forecast.utcOffsetSeconds).slice(0, 10);
+/** The forecast days, from today in the town. */
+export function forecastDates({
+  forecast,
+  now,
+  count,
+}: {
+  forecast: Forecast;
+  now: Date;
+  count: number;
+}): string[] {
+  const today = localNow({
+    now,
+    utcOffsetSeconds: forecast.utcOffsetSeconds,
+  }).slice(0, 10);
   return forecast.daily.date.filter((d) => d >= today).slice(0, count);
 }
 
@@ -42,11 +61,17 @@ export interface TimeWindow {
  */
 export type ValueKind = 'instant' | 'amount';
 
-export function windowIndices(
-  times: readonly string[],
-  window: TimeWindow,
-  kind: ValueKind,
-): number[] {
+export interface WindowIndicesInput {
+  times: readonly string[];
+  window: TimeWindow;
+  kind: ValueKind;
+}
+
+export function windowIndices({
+  times,
+  window,
+  kind,
+}: WindowIndicesInput): number[] {
   const result: number[] = [];
   times.forEach((t, i) => {
     const inside =
@@ -59,7 +84,13 @@ export function windowIndices(
 }
 
 /** The values at the indices, without null values. */
-export function pick(series: Series, indices: readonly number[]): number[] {
+export function pick({
+  series,
+  indices,
+}: {
+  series: Series;
+  indices: readonly number[];
+}): number[] {
   const result: number[] = [];
   for (const i of indices) {
     const v = series[i];
@@ -68,7 +99,13 @@ export function pick(series: Series, indices: readonly number[]): number[] {
   return result;
 }
 
-export function valueAt(series: Series, index: number): number | null {
+export function valueAt({
+  series,
+  index,
+}: {
+  series: Series;
+  index: number;
+}): number | null {
   if (index < 0) return null;
   return series[index] ?? null;
 }
@@ -91,7 +128,13 @@ export function min(values: readonly number[]): number | null {
 }
 
 /** Linear percentile (p from 0 to 100). */
-export function percentile(values: readonly number[], p: number): number {
+export function percentile({
+  values,
+  p,
+}: {
+  values: readonly number[];
+  p: number;
+}): number {
   const sorted = [...values].sort((a, b) => a - b);
   if (sorted.length === 0) throw new Error('No values.');
   const rank = (p / 100) * (sorted.length - 1);
@@ -125,13 +168,19 @@ export function circularMean(degrees: readonly number[]): CircularMean | null {
 }
 
 /** The smallest angle between 2 directions (0–180 degrees). */
-export function angleBetween(a: number, b: number): number {
+export function angleBetween({ a, b }: { a: number; b: number }): number {
   const d = Math.abs((((a - b) % 360) + 360) % 360);
   return d > 180 ? 360 - d : d;
 }
 
 /** Negative decimals round to tens (−1), hundreds (−2) and so on. */
-export function round(value: number, decimals = 0): number {
+export function round({
+  value,
+  decimals = 0,
+}: {
+  value: number;
+  decimals?: number;
+}): number {
   if (decimals < 0) {
     const step = 10 ** -decimals;
     return Math.round(value / step) * step;

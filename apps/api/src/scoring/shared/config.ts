@@ -8,7 +8,7 @@ export interface HourWindow {
   endHour: number;
 }
 
-function codes(from: number, to: number): readonly number[] {
+function codes({ from, to }: { from: number; to: number }): readonly number[] {
   return Array.from({ length: to - from + 1 }, (_, i) => from + i);
 }
 
@@ -47,8 +47,8 @@ export const sharedConfig = {
   /** scoring.md, section 2: WMO weather codes. */
   weatherCodes: {
     fog: [45, 48],
-    freezingRain: codes(66, 67),
-    thunderstorm: codes(95, 99),
+    freezingRain: codes({ from: 66, to: 67 }),
+    thunderstorm: codes({ from: 95, to: 99 }),
   },
 
   /** scoring.md, section 2, step 4: show 1 or 2 factors as reasons. */
