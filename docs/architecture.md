@@ -234,7 +234,7 @@ The backend makes the summary with rules. It returns structured items (key, `par
 | Item | Rule |
 |---|---|
 | Best days | The 1–2 days with the highest score. Only days with a score of 40 or more. No ended days. |
-| Trend | Compare the mean of days 1–3 with the mean of days 5–7. Show the trend only when the change is 10 points or more (a temporary value, refer to [future-improvements.md](future-improvements.md), item 1.2). Give the factor with the largest change in the same direction. |
+| Trend | Compare the mean of days 1–3 with the mean of days 5–7. Show the trend only when the change is 10 points or more (a temporary value, refer to [future-improvements.md](future-improvements.md), item 1.1). Give the factor with the largest change in the same direction. |
 | Warnings | All gates with an effect during the week, with their days. |
 | Confidence | A note when the best days have Medium or Low confidence. |
 | Notes | The mountain note, the coast direction note, and the note for missing terrain data. |

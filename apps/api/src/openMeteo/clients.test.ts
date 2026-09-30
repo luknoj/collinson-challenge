@@ -84,9 +84,6 @@ describe('getForecast', () => {
       daylightDuration: [30000],
       sunshineDuration: [7200],
       uvIndexMax: [1.2],
-      rainSum: [0],
-      windSpeedMax: [18],
-      windGustsMax: [35],
     });
   });
 

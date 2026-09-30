@@ -30,9 +30,6 @@ export const DAILY_VARIABLES = {
   daylightDuration: 'daylight_duration',
   sunshineDuration: 'sunshine_duration',
   uvIndexMax: 'uv_index_max',
-  rainSum: 'rain_sum',
-  windSpeedMax: 'wind_speed_10m_max',
-  windGustsMax: 'wind_gusts_10m_max',
 } as const satisfies Record<
   Exclude<keyof DailyForecast, 'date' | 'sunrise' | 'sunset'>,
   string

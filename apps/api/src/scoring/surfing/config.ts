@@ -44,7 +44,7 @@ export const surfingConfig = {
     thunderstorm: { maxScore: 0 },
     /**
      * Temporary values: scoring.md says "more than approximately 4 m" and "a
-     * maximum value". Refer to future-improvements.md, item 1.2.
+     * maximum value". Refer to future-improvements.md, item 1.1.
      */
     largeSwell: { aboveHeightM: 4, maxScore: 20 },
     strongWind: { aboveMeanKmh: 30, maxScore: 35 },
@@ -63,7 +63,7 @@ export const surfingConfig = {
     /**
      * Temporary value: scoring.md says "1 clear direction". This is the
      * minimum length of the mean vector of the sea directions (0–1).
-     * Refer to future-improvements.md, item 1.2.
+     * Refer to future-improvements.md, item 1.1.
      */
     minStrength: 0.5,
   },

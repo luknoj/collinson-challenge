@@ -44,7 +44,7 @@ export interface DayInput {
  * 3. The gates last.
  * 4. The 1–2 factors that decrease the score most are the reasons.
  *
- * Missing data (temporary rule, refer to future-improvements.md, item 1.2):
+ * Missing data (temporary rule, refer to future-improvements.md, item 1.1):
  * a factor with no data is not used. The weights of the other factors are
  * scaled so that their sum is 1. A DATA_MISSING note tells the user.
  */

@@ -55,6 +55,7 @@ describe('scoreOutdoor', () => {
       ).toMatchObject({
         value: 8,
         subScore: 0.5,
+        params: { startHour: 9, endHour: 18 },
       });
       expect(day.score).toBe(80);
     });
@@ -85,11 +86,19 @@ describe('scoreOutdoor', () => {
       expect(day.score).toBe(88);
     });
 
-    it('wind uses wind_speed_10m_max', () => {
-      const day = today({ options: { day: () => ({ windSpeedMax: 32.5 }) } });
-      expect(
-        day.factors.find((f) => f.key === 'OUTDOOR_WIND')?.subScore,
-      ).toBeCloseTo(0.5);
+    it('wind uses the maximum hourly wind speed in the daytime hours', () => {
+      // 17:00 is the last instant stamp of the window (09:00–18:00).
+      const wind = ({ day, hour }: { day: number; hour: number }) => {
+        if (day !== 0) return {};
+        if (hour === 17) return { windSpeed: 32.5 };
+        if (hour === 8 || hour === 18) return { windSpeed: 60 };
+        return {};
+      };
+      const day = today({ options: { hour: wind } });
+      const factor = day.factors.find((f) => f.key === 'OUTDOOR_WIND');
+      expect(factor?.value).toBe(32.5);
+      expect(factor?.subScore).toBeCloseTo(0.5);
+      expect(factor?.params).toEqual({ startHour: 9, endHour: 18 });
       expect(day.score).toBe(95);
     });
   });
@@ -183,9 +192,9 @@ describe('scoreOutdoor', () => {
       ]);
     });
 
-    it('wind_speed_10m_max more than 40 km/h: maximum 40', () => {
-      const wind = (windSpeedMax: number) => ({
-        day: () => ({ windSpeedMax }),
+    it('hourly wind speed more than 40 km/h: maximum 40', () => {
+      const wind = (windSpeed: number) => ({
+        hour: todayAt({ hour: 12, values: { windSpeed } }),
       });
       expect(gateKeys(wind(40))).toEqual([]);
       expect(gateKeys(wind(40.1))).toEqual(['HIGH_WIND_GATE']);

@@ -60,7 +60,7 @@ export const sharedConfig = {
     bestDayMinScore: 40,
     /**
      * Temporary value: scoring.md does not give a limit for the trend.
-     * Refer to future-improvements.md, item 1.2.
+     * Refer to future-improvements.md, item 1.1.
      */
     trendMinChange: 10,
   },

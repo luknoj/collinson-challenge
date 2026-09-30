@@ -32,6 +32,8 @@ export interface SightseeingDay {
   maxApparent: number | null;
   minApparent: number | null;
   maxGusts: number | null;
+  /** km/h, the maximum hourly wind speed */
+  maxWind: number | null;
   codes: number[];
 }
 
@@ -70,6 +72,7 @@ export function sightseeingDay({
     maxApparent: max(apparent),
     minApparent: min(apparent),
     maxGusts: max(pick({ series: h.windGusts, indices: amount })),
+    maxWind: max(pick({ series: h.windSpeed, indices: instant })),
     codes: pick({ series: h.weatherCode, indices: instant }),
   };
 }
@@ -121,8 +124,11 @@ function scoreOutdoorDay({
     part: valueAt({ series: daily.sunshineDuration, index: d }),
     whole: valueAt({ series: daily.daylightDuration, index: d }),
   });
-  const windMax = valueAt({ series: daily.windSpeedMax, index: d });
   const uv = valueAt({ series: daily.uvIndexMax, index: d });
+  const daytimeHours = {
+    startHour: config.window.startHour,
+    endHour: config.window.endHour,
+  };
 
   const probabilityScore = evaluateOptional({
     curve: curves.precipitationProbability,
@@ -185,9 +191,9 @@ function scoreOutdoorDay({
     },
     {
       key: 'HIGH_WIND_GATE',
-      active: windMax !== null && windMax > gates.highWind.aboveKmh,
+      active: w.maxWind !== null && w.maxWind > gates.highWind.aboveKmh,
       maxScore: gates.highWind.maxScore,
-      params: { windKmh: windMax, aboveKmh: gates.highWind.aboveKmh },
+      params: { windKmh: w.maxWind, aboveKmh: gates.highWind.aboveKmh },
     },
   ];
 
@@ -234,6 +240,7 @@ function scoreOutdoorDay({
         }),
         value: w.meanApparent,
         unit: '°C',
+        params: daytimeHours,
       },
       {
         key: 'OUTDOOR_SKY',
@@ -248,9 +255,10 @@ function scoreOutdoorDay({
       {
         key: 'OUTDOOR_WIND',
         weight: factors.wind.weight,
-        subScore: evaluateOptional({ curve: curves.wind, value: windMax }),
-        value: windMax,
+        subScore: evaluateOptional({ curve: curves.wind, value: w.maxWind }),
+        value: w.maxWind,
         unit: 'km/h',
+        params: daytimeHours,
       },
     ],
     adjustments,

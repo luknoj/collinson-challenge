@@ -42,7 +42,7 @@ export const skiingConfig = {
       [2, 1],
       [7, 0],
     ],
-    /** wind_gusts_10m_max (km/h) */
+    /** Maximum hourly wind_gusts_10m in the lift hours (km/h) */
     wind: [
       [30, 1],
       [60, 0],

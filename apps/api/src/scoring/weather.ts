@@ -45,12 +45,6 @@ export interface DailyForecast {
   /** s */
   sunshineDuration: Series;
   uvIndexMax: Series;
-  /** mm */
-  rainSum: Series;
-  /** km/h */
-  windSpeedMax: Series;
-  /** km/h */
-  windGustsMax: Series;
 }
 
 export interface Forecast {

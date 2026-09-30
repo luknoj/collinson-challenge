@@ -30,9 +30,6 @@ export interface DayValues {
   daylightDuration: number | null;
   sunshineDuration: number | null;
   uvIndexMax: number | null;
-  rainSum: number | null;
-  windSpeedMax: number | null;
-  windGustsMax: number | null;
 }
 
 /** Good weather for sightseeing. */
@@ -57,9 +54,6 @@ export const DEFAULT_DAY: Omit<DayValues, 'sunrise' | 'sunset'> = {
   daylightDuration: 12 * 3600,
   sunshineDuration: 10 * 3600,
   uvIndexMax: 3,
-  rainSum: 0,
-  windSpeedMax: 15,
-  windGustsMax: 20,
 };
 
 export interface ForecastOptions {
@@ -125,9 +119,6 @@ export function buildForecast(options: ForecastOptions = {}): Forecast {
       daylightDuration: dayCol('daylightDuration'),
       sunshineDuration: dayCol('sunshineDuration'),
       uvIndexMax: dayCol('uvIndexMax'),
-      rainSum: dayCol('rainSum'),
-      windSpeedMax: dayCol('windSpeedMax'),
-      windGustsMax: dayCol('windGustsMax'),
     },
   };
 }
