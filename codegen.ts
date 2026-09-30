@@ -10,10 +10,17 @@ const config: CodegenConfig = {
     // schema (for example, ExplanationKey.SNOW_BASE).
     enumsAsConst: true,
     namingConvention: { enumValues: 'keep' },
+    // The `params` of an explanation. The frontend has 1 type for each key.
+    scalars: { JSON: 'Record<string, unknown>' },
   },
   generates: {
     'apps/api/src/generated/graphql.ts': {
       plugins: ['typescript', 'typescript-resolvers'],
+      config: {
+        contextType: '../context.js#Context',
+        // Query.activities returns the location. The activity fields use it.
+        mappers: { Activities: '../resolvers/activities.js#ActivitiesParent' },
+      },
     },
     'apps/web/src/generated/graphql.ts': {
       documents: 'apps/web/src/**/*.graphql',

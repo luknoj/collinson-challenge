@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { createDataLayer } from './dataLayer.js';
 import { getTerrain, terrainPoints } from './elevation.js';
@@ -18,7 +18,7 @@ const KRAKOW = { latitude: 50.06, longitude: 19.94 };
 const noRetries = () => createDataLayer({ retryDelaysMs: [] });
 
 /** Gives the body for each request and keeps the request URLs. */
-function mock({ url, body }: { url: string; body: unknown }) {
+function mock({ url, body }: { url: string; body: JsonBodyType }) {
   const requests: URL[] = [];
   server.use(
     http.get(url, ({ request }) => {

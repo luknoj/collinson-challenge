@@ -5,7 +5,7 @@ import type { Coordinates } from './location.js';
 import { fetchJson, responseReader } from './response.js';
 
 /** The Open-Meteo name of each hourly variable. */
-const HOURLY = {
+export const MARINE_VARIABLES = {
   swellWaveHeight: 'swell_wave_height',
   swellWavePeriod: 'swell_wave_period',
   windWaveHeight: 'wind_wave_height',
@@ -30,7 +30,7 @@ export async function getMarine({
   const url = new URL(config.urls.marine);
   url.searchParams.set('latitude', String(location.latitude));
   url.searchParams.set('longitude', String(location.longitude));
-  url.searchParams.set('hourly', Object.values(HOURLY).join(','));
+  url.searchParams.set('hourly', Object.values(MARINE_VARIABLES).join(','));
   url.searchParams.set('timezone', 'auto');
   url.searchParams.set('forecast_days', String(config.forecast.forecastDays));
 
@@ -49,6 +49,10 @@ function parseMarine(body: unknown): MarineHourly {
   const time = read.times({ source: hourly, name: 'time' });
   return {
     time,
-    ...read.seriesGroup({ names: HOURLY, source: hourly, length: time.length }),
+    ...read.seriesGroup({
+      names: MARINE_VARIABLES,
+      source: hourly,
+      length: time.length,
+    }),
   };
 }

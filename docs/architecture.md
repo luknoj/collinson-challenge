@@ -44,12 +44,15 @@ eslint.config.js
 .prettierrc                 .prettierignore excludes the Markdown docs
 
 apps/api/src/
-  index.ts                  Apollo Server start (startStandaloneServer)
+  index.ts                  Apollo Server start (startStandaloneServer), 1 shared data layer
   server.ts                 createServer(), also used by the tests
+  context.ts                data layer, current time, time limit for each resolver
   schema.graphql            the contract between the 2 apps
   schema.ts                 reads schema.graphql
   resolvers/                Query, activity fields
+    activities.ts           1 resolver for each activity, time limit, UPSTREAM_UNAVAILABLE
     validateLocation.ts     input checks (BAD_USER_INPUT)
+    json.ts                 the JSON scalar
   openMeteo/
     config.ts               URLs, TTLs, retries, time limit, grid and ring sizes
     dataLayer.ts            joined calls, cache, retries, time limit
@@ -59,7 +62,7 @@ apps/api/src/
     forecast.ts
     marine.ts               null when all values are null (far from the sea)
     elevation.ts            1 request with 81 points (7×7 grid + ring)
-    testing/                mocked Open-Meteo (msw) for the tests
+    testing/                mocked Open-Meteo (msw) and response bodies for the tests
   scoring/
     index.ts                the public functions of the scoring module
     types.ts                result types (same shape as the schema)
@@ -175,7 +178,9 @@ All calls to Open-Meteo go through the data layer. It has these functions:
 | Marine fails | Only the `surfing` field fails. |
 | Elevation fails | No error. Skiing: the score does not change, but there is no mountain note. Surfing: there is no wind direction adjustment (−10 to +5), so the score can change. A note in each row tells the user. |
 
-The screen texts for these cases are in [ui-spec.md](ui-spec.md). A failed field returns a GraphQL error with `extensions.code = "UPSTREAM_UNAVAILABLE"`. "Not applicable" is not an error. It is a valid result with `status: NOT_APPLICABLE`.
+The screen texts for these cases are in [ui-spec.md](ui-spec.md). A failed field returns a GraphQL error with `extensions.code = "UPSTREAM_UNAVAILABLE"`. The error also has `extensions.api` (`forecast` or `marine`) and `extensions.reason` (the `OpenMeteoError` reason, or `TIME_LIMIT` after 10 s).
+
+The activity fields are non-null. Thus, a failed field makes all of `activities` null in its query. Each row sends its own query (section 3), so a failure has an effect only on its row. "Not applicable" is not an error. It is a valid result with `status: NOT_APPLICABLE`.
 
 ### 4.3 Location input
 
@@ -259,7 +264,7 @@ enum Confidence { HIGH  MEDIUM  LOW }
 type ActivityResult {
   status: ActivityStatus!
   notApplicableReason: Explanation     # for example, NO_SEA_NEARBY
-  weeklyScore: Int                     # null when NOT_APPLICABLE
+  weeklyScore: Int                     # null when NOT_APPLICABLE or when all days ended
   weeklyLabel: Label
   days: [DayScore!]!                   # 7 items, empty when NOT_APPLICABLE
   summary: [Explanation!]!
