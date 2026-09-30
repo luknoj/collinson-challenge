@@ -2,3 +2,73 @@ type Query {
   "Temporary query for the workspace setup. Phase 3 removes it."
   health: String!
 }
+
+"""
+The keys for all factors, gates, adjustments, notes, hints and summary items.
+The frontend has 1 text template for each key.
+"""
+enum ExplanationKey {
+  # Skiing factors
+  SNOW_BASE
+  FRESH_SNOW
+  SKI_TEMPERATURE
+  SKI_WIND
+  SKI_SKY
+  # Surfing factors
+  SWELL_HEIGHT
+  SWELL_PERIOD
+  SURF_WIND_SPEED
+  WAVE_QUALITY
+  WATER_COMFORT
+  # Outdoor factors
+  PRECIPITATION
+  THERMAL_COMFORT
+  OUTDOOR_SKY
+  OUTDOOR_WIND
+  # Gates
+  NO_SNOW_BASE_GATE
+  FREEZING_RAIN_GATE
+  RAIN_ON_SNOW_GATE
+  THUNDERSTORM_GATE
+  LARGE_SWELL_GATE
+  STRONG_WIND_GATE
+  EXTREME_TEMPERATURE_GATE
+  STRONG_GUSTS_GATE
+  HEAVY_RAIN_GATE
+  HIGH_WIND_GATE
+  # Adjustments
+  ONSHORE_WIND
+  OFFSHORE_WIND
+  FOG
+  # Notes
+  WIND_DIRECTION
+  COAST_DIRECTION_UNCLEAR
+  TERRAIN_UNAVAILABLE
+  MOUNTAIN_NOTE
+  MOUNTAIN_CONDITIONS
+  SNOW_DEPTH_CORRECTED
+  UV_VERY_HIGH
+  DATA_MISSING
+  # Not applicable
+  NO_SEA_NEARBY
+  NO_SNOW
+  # Indoor
+  TRAVEL_HINT
+  BUSY_HINT
+  TOWN_SIZE_LARGE
+  TOWN_SIZE_CITY
+  TOWN_SIZE_TOWN
+  TOWN_SIZE_SMALL
+  TOWN_SIZE_NO_DATA
+  # Weekly summary
+  BEST_DAYS
+  NO_GOOD_DAYS
+  LOW_CONFIDENCE
+  TREND_UP
+  TREND_DOWN
+  GATE_WARNING
+  INDOOR_RECOMMENDED_DAYS
+  INDOOR_GOOD_ALTERNATIVE_DAYS
+  INDOOR_BUSY_DAYS
+  GOOD_OUTDOOR_WEEK
+}
