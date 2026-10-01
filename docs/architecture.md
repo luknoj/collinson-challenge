@@ -321,7 +321,7 @@ type IndoorResult {
   recommendedDays: Int!                # "Recommended on 3 of 7 days"
   days: [IndoorDay!]!
   summary: [Explanation!]!
-  townSize: Explanation!               # NO_DATA when population is null
+  townSize: Explanation!               # TOWN_SIZE_NO_DATA when the population is null
 }
 
 type IndoorDay {
@@ -330,7 +330,7 @@ type IndoorDay {
   ended: Boolean!
   outdoorScore: Int!
   mainCause: Explanation               # the outdoor gate or the worst factor
-  hints: [Explanation!]!               # TRAVEL, BUSY
+  hints: [Explanation!]!               # TRAVEL_HINT, BUSY_HINT
 }
 
 enum ExplanationKey {
@@ -350,7 +350,7 @@ scalar JSON
 Rules for the schema:
 
 - **`params` uses a `JSON` scalar.** Each key has different values. The frontend has a TypeScript type for the `params` of each key.
-- **The keys are an `enum`.** The schema is the only source of the keys. Codegen (`enumsAsConst`) makes a constant object and a type in both apps, for example `ExplanationKey.SNOW_BASE`. The scoring code uses this type. The frontend has a `Record<ExplanationKey, Template>`. Thus, a missing template gives a TypeScript error.
+- **The keys are an `enum`.** The schema is the only source of the keys. Codegen makes a constant object and a type in both apps (`enumsAsConst` for the API, `enumType: 'const'` for the web app), for example `ExplanationKey.SNOW_BASE`. The scoring code uses this type. The frontend has a `Record<ExplanationKey, Template>`. Thus, a missing template gives a TypeScript error.
 - **Scores are integers.** The factor points are decimals. The UI rounds them.
 - **Units are metric only.**
 - **There is no Geocoding query.** The frontend calls Geocoding directly (section 3).
@@ -358,7 +358,7 @@ Rules for the schema:
 ## 6. Tests
 
 | Level | Tool | What the tests check |
-|---|---|---|---|
+|---|---|---|
 | Scoring unit tests | Vitest | Curves, factors, gates, adjustments, weekly score, ended days, summary rules, config validation. The tests use fixed weather data. |
 | API tests | Vitest, `msw` | GraphQL queries to Apollo Server with a mocked Open-Meteo: partial failures, retries, joined calls, no cache for failures, the 10 s limit, `NOT_APPLICABLE`, `BAD_USER_INPUT`. |
 

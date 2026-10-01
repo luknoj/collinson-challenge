@@ -74,6 +74,14 @@ This document lists known problems in the plan and ideas for later versions.
   - Clear the selected day when the town changes.
   - Do not let an old `/get` response replace a newer town. Keep the `id` of the current request. Ignore a response for a different `id`.
 
+### 3.2 Bundle size
+
+- **Location:** `apps/web`, `pnpm --filter @collinson/web build`.
+- **Problem:** The build makes 1 JavaScript file of approximately 630 kB (approximately 195 kB with gzip). Vite shows a warning for files larger than 500 kB. The app runs only on a local computer, thus the effect is small now.
+- **Correction:**
+  - Put React, Apollo Client and Base UI in separate chunks (`build.rolldownOptions.output.codeSplitting`). The browser can then keep them in its cache when the app code changes.
+  - Load the "How the scores work" panel with `React.lazy`, because it shows only after a click.
+
 ## 4. Data sources for later
 
 ### 4.1 Air Quality API (not decided)

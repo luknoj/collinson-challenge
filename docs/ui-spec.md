@@ -73,10 +73,10 @@ This document tells what the user sees on the screen and what the screen does. T
   Temperature   feels like 1 °C, 09:00–16:00   ██████████  15.0 / 15
   Wind          gusts 45 km/h                  █████░░░░░  10.0 / 20
   Sky           visibility 3 km, sun 0%        ███░░░░░░░   4.5 / 15
-  Total before gates: 58 (57.5)
-  ⚠ Rain on snow (6 mm at +4 °C): maximum 30
+  Total before gates: 58
+  ⚠ Rain on snow (6 mm at 4 °C): maximum score 30
   ```
-  The values come from the Zakopane example in [scoring-examples.md](scoring-examples.md). The bars use the Base UI `Meter`. The temperature shows its hours, because each activity uses its own hours (for example, skiing 09:00–16:00 and outdoor sightseeing 09:00–18:00). Thus, the 2 values for the same day can be different.
+  The values come from the Zakopane example in [scoring-examples.md](scoring-examples.md). The bars use the Base UI `Meter`. The values have 1 decimal or less. The temperature shows its hours, because each activity uses its own hours (for example, skiing 09:00–16:00 and outdoor sightseeing 09:00–18:00). Thus, the 2 values for the same day can be different. Under the gates, the breakdown shows the main reasons (the 1–2 factors that decrease the score most) and the notes for the day.
 - **Not applicable:** The row shows only the header and the reason (for example, "No sea near this town").
 - **Failure:** The row shows "Data not available" and a "Try again" button. The button calls `refetch` for that row only.
 
@@ -94,11 +94,11 @@ This document tells what the user sees on the screen and what the screen does. T
   ```
   Thu 3 Oct — Indoor: Recommended
   Outdoor score: 25 Fair
-  Main cause: Heavy rain (8 mm, probability 90%) → maximum 25
+  Main cause: Heavy rain (8 mm, probability 90%): maximum score 25
   Hints:
-    Busy: rain is probable, so museums can have more visitors.
+    Busy: popular indoor places can have more people than usual.
   ```
-  The breakdown has a link to the outdoor row for that day.
+  The breakdown has a link ("Show the outdoor breakdown") to the outdoor row for that day.
 - **Town size:** The row always shows the town size hint. When the population is not known, it shows "Town size: no data", with a popover that tells why.
 
 ## 6. Explanations
@@ -119,7 +119,9 @@ This document tells what the user sees on the screen and what the screen does. T
   The numbers in the panel (for example, the label ranges) come from [scoring.md](scoring.md). They are not in the API.
 - Each popover can have a "More" link. The link opens the panel at the correct section.
 - **Text templates:** `text/templates.ts` has 1 template for each `ExplanationKey`. The template gets the `params` from the backend. Thus, the numbers in the text always come from the config. The gates send their limits in `params` (for example, `aboveKmh`). A term in `[brackets]` in a template becomes a word with a popover. Example:
-  > "Rain on snow makes the slopes wet and heavy. When the rain is more than {rainMm} mm and the temperature is more than {tempC} °C, the maximum score is {maxScore}."
+  > "Rain on snow makes the slopes wet and heavy. When the rain is more than {aboveRainMm} and the temperature is more than {aboveTemperatureC}, the maximum score is {maxScore}."
+
+  The param reader in `text/params.ts` adds the unit and rounds the number (for example, `2 mm`).
 
 ## 7. Phone layout
 
