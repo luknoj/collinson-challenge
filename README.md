@@ -1,6 +1,14 @@
+# Activity Forecast
+
+Find a town to see the best days for skiing, surfing, and outdoor and indoor sightseeing in the next 7 days. All data comes from Open-Meteo.
+
 ## Approach
 
-Ive started working on the APP by "checking" how the scoring system should work for the required activities. From there i was incrementally adjusting it, from AI findings to pushing it with any data evidence to confirm the assumptions on the scoring. First there was one big document with examples, sources etc. It got split to build an [architecture plan](docs/architecture.md) and finally the [implementation-plan](docs/implementation-plan.md). When all of that was done i was building everything step by step and testing parts that i could easily test. In between i was facing some misalignments with the scoring that was being adjusted and somewhere i think around phase 3 i checked the progress and documents with another coding agent. From that ive created the [future-improvements](docs/future-improvements.md) plan with gaps and additional ideas like the usage of Air Quality API - this also came from checking the Open Meteo API by myself, but didn't want to flip everything midway and left it as an improvement. From the commits and PR history you can see that some of the gaps surfaced while testing and were fixed during the development.
+1. **Scoring first.** Before any code, I worked out how each activity should be scored. AI research gave me a starting point, and then I checked the assumptions against real evidence (studies, industry rules and actual Open-Meteo responses). That's in [scoring.md](docs/scoring.md), with the [evidence](docs/scoring-evidence.md) and [worked examples](docs/scoring-examples.md).
+2. **Plan.** It started as one big document. I split it into the [architecture](docs/architecture.md), the [UI spec](docs/ui-spec.md) and an [implementation plan](docs/implementation-plan.md) with eight phases.
+3. **A second opinion.** I had another coding agent go through the docs. The gaps it found, plus a few ideas of my own, went into [future improvements](docs/future-improvements.md). For example, I came across the Air Quality API while digging through Open-Meteo, but I didn't want to change the plan halfway through, so it's parked there.
+4. **Implementation.** One phase at a time, one pull request per phase, and I reviewed each one before merging. I tested whatever was easy to test along the way.
+5. **Fixes from testing.** Some gaps only showed up once I went through the app. For example: skiing was using the strongest gusts of the whole day, instead of only the lift hours (PR #11).
 
 ## Requirements
 
